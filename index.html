@@ -12,9 +12,9 @@
       --stroke: rgba(255,255,255,.10);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.62);
-      --good: rgba(120, 220, 160, .85);
-      --bad: rgba(255, 140, 140, .85);
-      --accent: rgba(140, 210, 255, .9);
+      --accent: rgba(140, 210, 255, .92);
+      --good: rgba(120, 220, 160, .88);
+      --bad: rgba(255, 150, 150, .88);
       --shadow: rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
@@ -35,7 +35,8 @@
       z-index:3; position:relative;
     }
     .title h1{margin:0; font-size:16px; font-weight:650; letter-spacing:.2px}
-    .title p{margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.35; max-width:560px}
+    .title p{margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.35; max-width:620px}
+
     .panel{
       background: linear-gradient(180deg, var(--panel), var(--panel2));
       border:1px solid var(--stroke);
@@ -44,15 +45,12 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
+
     .controls{
-      width:min(520px, calc(100vw - 28px));
+      width:min(560px, calc(100vw - 28px));
       padding:12px 12px 10px;
     }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
     .slot{
       padding:10px;
       border:1px solid rgba(255,255,255,.08);
@@ -65,9 +63,24 @@
       font-weight:650;
       color: rgba(255,255,255,.86);
       letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .badge{
+      font-size:11px;
+      color: rgba(255,255,255,.75);
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+      user-select:none;
+      white-space:nowrap;
     }
     .row{display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; margin:8px 0;}
     label{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);}
+
     input[type="range"]{width:100%; appearance:none; height:18px; background: transparent; outline:none;}
     input[type="range"]::-webkit-slider-runnable-track{
       height:8px; border-radius:999px;
@@ -92,6 +105,7 @@
       border:1px solid rgba(255,255,255,.25);
       box-shadow: 0 8px 20px rgba(0,0,0,.35), 0 0 0 4px rgba(140,210,255,.10);
     }
+
     .val{
       min-width:56px;
       text-align:right;
@@ -104,11 +118,8 @@
       color: rgba(255,255,255,.84);
       user-select:none;
     }
-    .buttons{
-      display:flex;
-      gap:10px;
-      margin-top:10px;
-    }
+
+    .buttons{display:flex; gap:10px; margin-top:10px;}
     button{
       flex:1;
       cursor:pointer;
@@ -130,18 +141,20 @@
       flex:1;
       padding: 0 14px 14px;
       display:grid;
-      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
       gap:12px;
       z-index:2;
+      min-height:0;
     }
+
     .stage{
       position:relative;
       overflow:hidden;
-      height: min(62vh, 560px);
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       box-shadow: 0 14px 60px rgba(0,0,0,.35);
       background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.08));
+      min-height: 360px;
     }
     canvas{position:absolute; inset:0; width:100%; height:100%;}
     .overlay{
@@ -156,42 +169,88 @@
       mix-blend-mode: screen;
     }
 
-    .stats{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
+    .scoreOverlay{
+      position:absolute;
+      left:12px; right:12px; top:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
       gap:10px;
-      padding:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index:5;
+      box-shadow: 0 14px 45px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+      user-select:none;
     }
-    .stat{
+    .team{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      min-width:140px;
+    }
+    .team .name{
+      font-size:12px;
+      color: rgba(255,255,255,.75);
+      letter-spacing:.2px;
+    }
+    .team .score{
+      font-size:20px;
+      font-weight:750;
+      font-variant-numeric: tabular-nums;
+      letter-spacing:.4px;
+    }
+    .serveDot{
+      width:10px; height:10px; border-radius:50%;
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 0 4px rgba(140,210,255,.10);
+      background: rgba(255,255,255,.25);
+      margin-left:6px;
+    }
+    .serveDot.on{ background: rgba(140,210,255,.85); }
+
+    .midInfo{
+      text-align:center;
+      flex:1;
+      min-width:120px;
+    }
+    .midInfo .small{font-size:11px; color: var(--muted)}
+    .midInfo .big{font-size:12px; margin-top:4px; color: rgba(255,255,255,.86)}
+
+    .bottom{
+      display:grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap:12px;
+      min-height:0;
+    }
+    .cards{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; padding:10px;}
+    .card{
       padding:10px;
       border:1px solid rgba(255,255,255,.08);
       border-radius:12px;
       background: rgba(0,0,0,.12);
     }
-    .stat .k{font-size:11px; color:var(--muted); margin-bottom:6px;}
-    .stat .v{font-size:14px; font-variant-numeric: tabular-nums; letter-spacing:.2px;}
+    .card .k{font-size:11px; color:var(--muted); margin-bottom:6px;}
+    .card .v{font-size:14px; font-variant-numeric: tabular-nums; letter-spacing:.2px;}
     .bar{
-      height:8px;
-      border-radius:999px;
+      height:8px; border-radius:999px;
       background: rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.08);
       overflow:hidden;
       margin-top:8px;
     }
-    .bar > i{
-      display:block;
-      height:100%;
-      width:50%;
-      background: linear-gradient(90deg, rgba(140,210,255,.65), rgba(120,220,160,.55));
-    }
+    .bar > i{display:block; height:100%; width:50%; background: linear-gradient(90deg, rgba(140,210,255,.65), rgba(120,220,160,.55));}
 
     .log{
       padding:10px 12px;
-      height: 150px;
       overflow:auto;
       font-size:12px;
       line-height:1.35;
       color: rgba(255,255,255,.84);
+      min-height:0;
     }
     .log .muted{color:var(--muted)}
     .pill{
@@ -204,12 +263,15 @@
       font-size:11px;
       color: rgba(255,255,255,.78);
     }
+    .pill.good{border-color: rgba(120,220,160,.25); color: rgba(120,220,160,.88);}
+    .pill.bad{border-color: rgba(255,150,150,.25); color: rgba(255,150,150,.88);}
 
-    @media (max-width: 920px){
+    @media (max-width: 980px){
       header{flex-direction:column; align-items:stretch;}
       .grid{grid-template-columns:1fr;}
-      .stats{grid-template-columns:1fr;}
-      .stage{height: min(58vh, 520px);}
+      main{grid-template-rows: 1fr auto;}
+      .bottom{grid-template-columns: 1fr; }
+      .cards{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -218,13 +280,13 @@
   <header>
     <div class="title">
       <h1>Badminton sim</h1>
-      <p>Match simulator using player skills. Adjust Speed, Smash Power, and Intelligence for both players, then run rallies to see outcomes.</p>
+      <p>Single match simulator (singles). Skills drive rally outcomes. Real rules: first to 21, win by 2, cap at 30. Serve stays with the rally winner.</p>
     </div>
 
     <div class="panel controls" role="region" aria-label="Controls">
       <div class="grid">
         <div class="slot">
-          <h3>Player A</h3>
+          <h3>Player A <span class="badge" id="aBadge">bottom court</span></h3>
           <div class="row">
             <label>Speed
               <input id="aSpeed" type="range" min="0" max="100" step="1" value="65">
@@ -246,7 +308,7 @@
         </div>
 
         <div class="slot">
-          <h3>Player B</h3>
+          <h3>Player B <span class="badge" id="bBadge">top court</span></h3>
           <div class="row">
             <label>Speed
               <input id="bSpeed" type="range" min="0" max="100" step="1" value="60">
@@ -269,45 +331,84 @@
       </div>
 
       <div class="buttons">
-        <button id="play">Play point</button>
-        <button id="auto">Auto (10 pts)</button>
-        <button id="reset">Reset</button>
+        <button id="play">Play rally</button>
+        <button id="auto">Auto (10 rallies)</button>
+        <button id="reset">Reset game</button>
       </div>
     </div>
   </header>
 
   <main>
     <div class="stage panel">
+      <div class="scoreOverlay" aria-label="Scoreboard">
+        <div class="team" aria-label="Player A score">
+          <div class="name">Player A <span class="serveDot" id="serveA" title="Serving"></span></div>
+          <div class="score" id="scoreA">0</div>
+        </div>
+
+        <div class="midInfo">
+          <div class="small" id="ruleLine">Game to 21 • win by 2 • cap 30</div>
+          <div class="big" id="statusLine">Ready</div>
+        </div>
+
+        <div class="team" style="justify-content:flex-end;" aria-label="Player B score">
+          <div class="score" id="scoreB">0</div>
+          <div class="name"><span class="serveDot" id="serveB" title="Serving"></span> Player B</div>
+        </div>
+      </div>
+
       <canvas id="cv"></canvas>
       <div class="overlay"></div>
     </div>
 
-    <div class="panel stats">
-      <div class="stat">
-        <div class="k">Score</div>
-        <div class="v"><span id="scoreA">0</span> - <span id="scoreB">0</span></div>
-        <div class="bar" aria-hidden="true"><i id="scoreBar"></i></div>
+    <div class="bottom">
+      <div class="panel">
+        <div class="cards">
+          <div class="card">
+            <div class="k">Win chance (next rally)</div>
+            <div class="v"><span id="chanceA">50</span>% / <span id="chanceB">50</span>%</div>
+            <div class="bar" aria-hidden="true"><i id="chanceBar"></i></div>
+          </div>
+          <div class="card">
+            <div class="k">Rally length (last)</div>
+            <div class="v" id="rallyLen">—</div>
+            <div class="k" style="margin-top:8px;">Shot that ended rally</div>
+            <div class="v" id="endShot">—</div>
+          </div>
+          <div class="card">
+            <div class="k">Result (last)</div>
+            <div class="v" id="lastPoint">—</div>
+            <div class="k" style="margin-top:8px;">Reason</div>
+            <div class="v" id="reason">—</div>
+          </div>
+        </div>
       </div>
-      <div class="stat">
-        <div class="k">Win chance (next point)</div>
-        <div class="v"><span id="chanceA">50</span>% / <span id="chanceB">50</span>%</div>
-        <div class="bar" aria-hidden="true"><i id="chanceBar"></i></div>
-      </div>
-      <div class="stat">
-        <div class="k">Last point</div>
-        <div class="v" id="lastPoint">—</div>
-        <div class="k" style="margin-top:8px;"><span class="pill" id="rallyLen">Rally: —</span><span class="pill" id="reason">Reason: —</span></div>
-      </div>
-    </div>
 
-    <div class="panel log" id="log" aria-label="Match log"></div>
+      <div class="panel log" id="log" aria-label="Match log"></div>
+    </div>
   </main>
 </div>
 
 <script>
 (() => {
-  // ----- UI
+  // ---- helpers
   const el = (id) => document.getElementById(id);
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  const smooth = (t)=>t*t*(3-2*t);
+
+  function randn() { // Box-Muller
+    let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+  function pickWeighted(items){
+    let s = 0; for (const it of items) s += it.w;
+    let r = Math.random()*s;
+    for (const it of items){ r -= it.w; if (r <= 0) return it.v; }
+    return items[items.length-1].v;
+  }
+
+  // ---- UI refs
   const ui = {
     aSpeed: el('aSpeed'), aSmash: el('aSmash'), aIQ: el('aIQ'),
     bSpeed: el('bSpeed'), bSmash: el('bSmash'), bIQ: el('bIQ'),
@@ -315,18 +416,14 @@
     bSpeedVal: el('bSpeedVal'), bSmashVal: el('bSmashVal'), bIQVal: el('bIQVal'),
     play: el('play'), auto: el('auto'), reset: el('reset'),
     scoreA: el('scoreA'), scoreB: el('scoreB'),
-    chanceA: el('chanceA'), chanceB: el('chanceB'),
-    lastPoint: el('lastPoint'),
-    rallyLen: el('rallyLen'),
-    reason: el('reason'),
-    scoreBar: el('scoreBar'),
-    chanceBar: el('chanceBar'),
+    serveA: el('serveA'), serveB: el('serveB'),
+    statusLine: el('statusLine'),
+    chanceA: el('chanceA'), chanceB: el('chanceB'), chanceBar: el('chanceBar'),
+    rallyLen: el('rallyLen'), endShot: el('endShot'),
+    lastPoint: el('lastPoint'), reason: el('reason'),
     log: el('log'),
     cv: el('cv')
   };
-
-  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
-  const lerp = (a,b,t)=>a+(b-a)*t;
 
   function readSkills() {
     return {
@@ -347,443 +444,553 @@
     ui[id].addEventListener('input', updateVals, {passive:true});
   });
 
-  // ----- Match state
-  const match = {
-    scoreA: 0,
-    scoreB: 0,
-    last: null,
-    anim: null,
-    busy: false
-  };
-
-  // ----- Simple but realistic-ish point model
-  // Each rally consists of exchanges. Probability shifts based on:
-  // - Speed: court coverage & defense
-  // - Intelligence: shot selection & error avoidance
-  // - Smash: kill potential but also slightly increases error at high levels
-  //
-  // This is not physics-accurate badminton; it's a skills-based simulator with sensible dynamics.
-  function pointWinChance(sk) {
-    // build an "effective strength" for each player
-    // weights tuned for balanced outcomes
-    const eff = (p) => {
-      const smashRisk = 0.12 * Math.pow(clamp((p.sm - 70)/30, 0, 1), 1.4); // big smash -> more risk
-      const attack = 0.50*p.sm + 0.25*p.iq + 0.25*p.spd;
-      const defense= 0.45*p.spd + 0.40*p.iq + 0.15*(100-p.sm*0.25);
-      const base = 0.58*attack + 0.42*defense;
-      return base * (1 - smashRisk);
-    };
-    const a = eff(sk.A);
-    const b = eff(sk.B);
-    // logistic transform to probability
-    const d = (a - b) / 18.0;
-    const pA = 1 / (1 + Math.exp(-d));
-    return clamp(pA, 0.05, 0.95);
-  }
-
-  function simulatePoint(sk) {
-    const pA0 = pointWinChance(sk);
-
-    // rally length influenced by defense (speed+iq) and attack imbalance
-    const defA = 0.55*sk.A.spd + 0.45*sk.A.iq;
-    const defB = 0.55*sk.B.spd + 0.45*sk.B.iq;
-    const atkA = 0.65*sk.A.sm  + 0.35*sk.A.iq;
-    const atkB = 0.65*sk.B.sm  + 0.35*sk.B.iq;
-
-    const defense = (defA + defB)/2;
-    const attack  = (atkA + atkB)/2;
-    const imbalance = Math.abs(atkA - atkB) * 0.25 + Math.abs(defA - defB) * 0.15;
-
-    const expected = clamp(6 + (defense-50)*0.10 - (attack-50)*0.06 - imbalance*0.04, 3, 20);
-    const rally = Math.max(1, Math.round(expected + randn()*2.2));
-
-    // Determine end reason
-    // More smash => more winners and also more out/into net at extremes
-    const smashAgg = (sk.A.sm + sk.B.sm)/2;
-    const errBias = clamp((smashAgg - 55)/55, 0, 1); // higher smash => more decisive points
-    const winnerBias = clamp((smashAgg - 45)/65, 0, 1);
-
-    // Sample winner using pA0 slightly nudged by intelligence when rally is long
-    const longRally = clamp((rally - 6)/14, 0, 1);
-    const iqEdge = (sk.A.iq - sk.B.iq) / 220; // small
-    const pA = clamp(pA0 + longRally * iqEdge, 0.05, 0.95);
-
-    const winA = Math.random() < pA;
-
-    // Reason
-    const r = Math.random();
-    let reason;
-    if (r < 0.30 + 0.25*winnerBias) {
-      reason = "Winner (smash/kill)";
-    } else if (r < 0.62 + 0.18*errBias) {
-      reason = "Forced error";
-    } else {
-      reason = "Unforced error";
-    }
-
-    // If low intelligence, increase unforced error probability
-    const avgIQ = (sk.A.iq + sk.B.iq)/2;
-    if (Math.random() < clamp((55 - avgIQ)/120, 0, 0.20)) reason = "Unforced error";
-
-    return { winA, rally, reason, pA };
-  }
-
-  function randn() {
-    // Box-Muller
-    let u = 0, v = 0;
-    while (u === 0) u = Math.random();
-    while (v === 0) v = Math.random();
-    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-  }
-
-  function updateScoreUI() {
-    ui.scoreA.textContent = match.scoreA;
-    ui.scoreB.textContent = match.scoreB;
-
-    const total = match.scoreA + match.scoreB;
-    const fracA = total === 0 ? 0.5 : match.scoreA / total;
-    ui.scoreBar.style.width = `${clamp(fracA*100, 5, 95)}%`;
-  }
-
   function addLog(html) {
     const atBottom = (ui.log.scrollTop + ui.log.clientHeight) >= (ui.log.scrollHeight - 12);
     ui.log.insertAdjacentHTML('beforeend', html);
     if (atBottom) ui.log.scrollTop = ui.log.scrollHeight;
   }
 
-  function updateChances() {
-    const sk = readSkills();
-    const pA = pointWinChance(sk);
-    const a = Math.round(pA*100);
-    const b = 100 - a;
-    ui.chanceA.textContent = a;
-    ui.chanceB.textContent = b;
-    ui.chanceBar.style.width = `${clamp(a, 5, 95)}%`;
+  // ---- Game rules: 21, win by 2, cap 30
+  function isGameOver(a,b){
+    const max = Math.max(a,b), min = Math.min(a,b);
+    if (max >= 30) return true;
+    if (max >= 21 && (max - min) >= 2) return true;
+    return false;
   }
 
-  // ----- Court visualization (simple + realistic layout)
-  const ctx = ui.cv.getContext('2d', { alpha:false });
-  function resizeCanvas() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const rect = ui.cv.getBoundingClientRect();
-    ui.cv.width = Math.floor(rect.width * dpr);
-    ui.cv.height = Math.floor(rect.height * dpr);
-  }
-  window.addEventListener('resize', () => { resizeCanvas(); }, {passive:true});
-  resizeCanvas();
-
-  // Scene coordinates in "court space"
-  const scene = {
-    // normalized court bounds in screen px computed per frame
-    w: 0, h: 0,
-    court: null,
-    // positions (0..1 in court length), A bottom side, B top side
-    A: { x: 0.55, y: 0.82 },
-    B: { x: 0.45, y: 0.18 },
-    shuttle: { x: 0.50, y: 0.50, z: 0.0, vx:0, vy:0, vz:0 },
+  // ---- Match state
+  const match = {
+    a: 0, b: 0,
+    server: 'A', // A or B
+    busy: false
   };
 
-  function courtRect() {
-    const w = ui.cv.width, h = ui.cv.height;
-    scene.w = w; scene.h = h;
-    const marginX = w * 0.12;
-    const marginY = h * 0.10;
-    const cw = w - 2*marginX;
-    const ch = h - 2*marginY;
-    // Slight perspective (top narrower)
-    const topInset = cw * 0.08;
+  function updateScoreUI(){
+    ui.scoreA.textContent = match.a;
+    ui.scoreB.textContent = match.b;
+    ui.serveA.classList.toggle('on', match.server === 'A');
+    ui.serveB.classList.toggle('on', match.server === 'B');
+  }
+
+  // ---- Skill model (more realistic flow)
+  // Shot selection depends on intelligence and context (attack/defense).
+  // Speed drives retrieval and defense.
+  // Smash drives winners but adds error risk when overused or low IQ.
+  function pointWinChance(sk){
+    // A "macro" estimate for next rally (not full sim)
+    const aAtk = 0.62*sk.A.sm + 0.38*sk.A.iq;
+    const bAtk = 0.62*sk.B.sm + 0.38*sk.B.iq;
+    const aDef = 0.58*sk.A.spd + 0.42*sk.A.iq;
+    const bDef = 0.58*sk.B.spd + 0.42*sk.B.iq;
+
+    const a = 0.55*aAtk + 0.45*aDef;
+    const b = 0.55*bAtk + 0.45*bDef;
+
+    const d = (a - b) / 17.0;
+    const pA = 1 / (1 + Math.exp(-d));
+    return clamp(pA, 0.08, 0.92);
+  }
+
+  function simulateRally(sk){
+    // Start context: server has slight initiative advantage
+    let attacker = match.server; // who is pressing at the moment
+    let defender = attacker === 'A' ? 'B' : 'A';
+
+    const get = (id)=> id==='A'? sk.A : sk.B;
+
+    // Rally length baseline from defense & intelligence
+    const defAvg = (0.60*sk.A.spd+0.40*sk.A.iq + 0.60*sk.B.spd+0.40*sk.B.iq)/2;
+    const atkAvg = (0.65*sk.A.sm + 0.65*sk.B.sm)/2;
+    const baseLen = clamp(5 + (defAvg-50)*0.10 - (atkAvg-50)*0.05 + randn()*1.8, 2, 26);
+    const exchanges = Math.max(2, Math.round(baseLen));
+
+    // Track some rally fatigue (minor)
+    let fatigueA = 0, fatigueB = 0;
+
+    // Determine ending event during exchanges
+    let endAt = exchanges;
+    let endShot = '—';
+    let reason = '—';
+    let winner = null;
+
+    // Utility: probability of defender returning a shot
+    function pReturn(attId, defId, shot){
+      const att = get(attId), def = get(defId);
+      const pace = shot === 'smash' ? lerp(0.62, 0.90, att.sm/100)
+                 : shot === 'drive' ? 0.72
+                 : shot === 'drop'  ? 0.55
+                 : shot === 'net'   ? 0.50
+                 : 0.62; // clear
+
+      const placement = lerp(0.45, 0.78, att.iq/100); // better placement harder to return
+      const defense = lerp(0.50, 0.88, (0.70*def.spd + 0.30*def.iq)/100);
+
+      // fatigue reduces defense slightly
+      const fat = defId==='A'? fatigueA : fatigueB;
+      const defEff = defense * (1 - 0.18*fat);
+
+      // return probability
+      const p = clamp(defEff - 0.45*pace - 0.22*placement + 0.55, 0.05, 0.97);
+      return p;
+    }
+
+    function pUnforced(attId, shot){
+      const att = get(attId);
+      const iq = att.iq/100;
+      // smash has higher unforced risk if low IQ or very high smash
+      const smashOver = clamp((att.sm - 75)/25, 0, 1);
+      const base = shot === 'smash' ? (0.06 + 0.10*smashOver) : 0.03;
+      const poorIQ = clamp((0.55 - iq), 0, 0.55);
+      return clamp(base + 0.10*poorIQ, 0.01, 0.22);
+    }
+
+    function chooseShot(attId, defId){
+      const att = get(attId);
+      const def = get(defId);
+      const iq = att.iq/100;
+      const smash = att.sm/100;
+      const defSpd = def.spd/100;
+
+      // If attacker is strong & defender slower -> more smash/drive.
+      const mismatch = clamp((smash - defSpd)*0.9, -0.5, 0.5);
+
+      // IQ increases variety & good choice (less random smash spam).
+      const smashW = lerp(0.18, 0.34, smash) + mismatch*0.12 - (1-iq)*0.10;
+      const driveW = 0.22 + mismatch*0.05;
+      const dropW  = 0.20 + (iq*0.10) - mismatch*0.03;
+      const netW   = 0.16 + (iq*0.12) - mismatch*0.02;
+      const clearW = 0.22 + (1-iq)*0.06;
+
+      const weights = [
+        {v:'smash', w: clamp(smashW, 0.08, 0.46)},
+        {v:'drive', w: clamp(driveW, 0.10, 0.34)},
+        {v:'drop',  w: clamp(dropW,  0.10, 0.34)},
+        {v:'net',   w: clamp(netW,   0.08, 0.32)},
+        {v:'clear', w: clamp(clearW, 0.10, 0.40)},
+      ];
+      return pickWeighted(weights);
+    }
+
+    for (let i=1;i<=exchanges;i++){
+      const shot = chooseShot(attacker, defender);
+
+      // unforced error by attacker
+      if (Math.random() < pUnforced(attacker, shot)){
+        endAt = i;
+        endShot = shot;
+        reason = 'Unforced error';
+        winner = defender;
+        break;
+      }
+
+      // defender returns?
+      if (Math.random() > pReturn(attacker, defender, shot)){
+        // winner by attacker (winner / forced error)
+        endAt = i;
+        endShot = shot;
+        // if smash or drive -> winner, else forced error
+        if (shot === 'smash' || shot === 'drive') reason = 'Winner';
+        else reason = 'Forced error';
+        winner = attacker;
+        break;
+      }
+
+      // rally continues; small fatigue
+      if (attacker === 'A') fatigueA = clamp(fatigueA + 0.018, 0, 1);
+      else fatigueB = clamp(fatigueB + 0.018, 0, 1);
+
+      // Sometimes attack switches (defender turns tables), more likely with high IQ/speed
+      const def = get(defender);
+      const flip = clamp(0.10 + 0.18*(def.iq/100) + 0.12*(def.spd/100), 0.08, 0.42);
+      if (Math.random() < flip){
+        const tmp = attacker; attacker = defender; defender = tmp;
+      } else {
+        // mostly alternate roles
+        const tmp = attacker; attacker = defender; defender = tmp;
+      }
+    }
+
+    // If no break happened, decide by slight skill edge
+    if (!winner){
+      const pA = pointWinChance(sk);
+      winner = (Math.random() < pA) ? 'A' : 'B';
+      endShot = 'drive';
+      reason = 'Forced error';
+      endAt = exchanges;
+    }
+
+    // Server changes only if server won rally (rally point system: winner gets point; winner serves next)
     return {
-      x0: marginX + topInset, y0: marginY,
-      x1: marginX + cw - topInset, y1: marginY,
-      x2: marginX + cw, y2: marginY + ch,
-      x3: marginX, y3: marginY + ch,
-      // helper
-      marginX, marginY, cw, ch, topInset
+      winner,
+      exchanges: endAt,
+      endShot,
+      reason
     };
   }
 
-  function lerp2(a,b,t){ return {x:lerp(a.x,b.x,t), y:lerp(a.y,b.y,t)}; }
-  function mapCourt(nx, ny) {
-    // Bilinear mapping within trapezoid (top edge smaller)
-    const c = scene.court;
-    const topL = {x:c.x0, y:c.y0}, topR = {x:c.x1, y:c.y1};
-    const botR = {x:c.x2, y:c.y2}, botL = {x:c.x3, y:c.y3};
-    const left  = lerp2(topL, botL, ny);
-    const right = lerp2(topR, botR, ny);
-    return lerp2(left, right, nx);
+  function updateChances(){
+    const sk = readSkills();
+    const pA = pointWinChance(sk);
+    const a = Math.round(pA*100);
+    ui.chanceA.textContent = a;
+    ui.chanceB.textContent = 100-a;
+    ui.chanceBar.style.width = `${clamp(a, 5, 95)}%`;
   }
 
-  function drawCourt() {
-    scene.court = courtRect();
-    const c = scene.court;
-    const w = scene.w, h = scene.h;
+  // ---- Canvas rendering (court + players + shuttle)
+  const ctx = ui.cv.getContext('2d', {alpha:false});
 
-    // Background (hall)
-    const g = ctx.createLinearGradient(0,0,0,h);
-    g.addColorStop(0, 'rgb(12,16,18)');
-    g.addColorStop(1, 'rgb(8,12,14)');
-    ctx.fillStyle = g;
+  function resizeCanvas(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const r = ui.cv.getBoundingClientRect();
+    ui.cv.width = Math.floor(r.width*dpr);
+    ui.cv.height = Math.floor(r.height*dpr);
+  }
+  window.addEventListener('resize', () => { resizeCanvas(); renderStatic(); }, {passive:true});
+  resizeCanvas();
+
+  const scene = {
+    court: null,
+    A: {x:0.55,y:0.84},
+    B: {x:0.45,y:0.16},
+    shuttle: {x:0.50,y:0.50,z:0.0},
+  };
+
+  function courtRect(){
+    const w=ui.cv.width, h=ui.cv.height;
+    const mx=w*0.10, my=h*0.10;
+    const cw=w-2*mx, ch=h-2*my;
+    const topInset=cw*0.10;
+    return {w,h,mx,my,cw,ch,topInset,
+      x0: mx+topInset, y0: my,
+      x1: mx+cw-topInset, y1: my,
+      x2: mx+cw, y2: my+ch,
+      x3: mx, y3: my+ch
+    };
+  }
+  function lerp2(a,b,t){ return {x:lerp(a.x,b.x,t), y:lerp(a.y,b.y,t)}; }
+  function mapCourt(nx,ny){
+    const c=scene.court;
+    const topL={x:c.x0,y:c.y0}, topR={x:c.x1,y:c.y1};
+    const botR={x:c.x2,y:c.y2}, botL={x:c.x3,y:c.y3};
+    const left=lerp2(topL,botL,ny);
+    const right=lerp2(topR,botR,ny);
+    return lerp2(left,right,nx);
+  }
+
+  function drawCourt(){
+    scene.court = courtRect();
+    const c=scene.court;
+    const w=c.w, h=c.h;
+
+    // hall background
+    const bg = ctx.createLinearGradient(0,0,0,h);
+    bg.addColorStop(0,'rgb(11,15,17)');
+    bg.addColorStop(1,'rgb(7,10,12)');
+    ctx.fillStyle=bg;
     ctx.fillRect(0,0,w,h);
 
-    // Court surface
+    // court polygon
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(c.x0,c.y0); ctx.lineTo(c.x1,c.y1); ctx.lineTo(c.x2,c.y2); ctx.lineTo(c.x3,c.y3);
     ctx.closePath();
+
     const cg = ctx.createLinearGradient(0,c.y0,0,c.y2);
-    cg.addColorStop(0, 'rgba(35, 150, 90, .22)');
-    cg.addColorStop(1, 'rgba(20, 110, 70, .18)');
-    ctx.fillStyle = cg;
+    cg.addColorStop(0,'rgba(34, 150, 92, .26)');
+    cg.addColorStop(1,'rgba(18, 105, 70, .20)');
+    ctx.fillStyle=cg;
     ctx.fill();
 
-    // Subtle texture lines
-    ctx.globalAlpha = 0.22;
-    ctx.strokeStyle = 'rgba(255,255,255,.12)';
-    ctx.lineWidth = Math.max(1, w * 0.0012);
-    for (let i=0;i<18;i++){
-      const t = i/17;
-      const a = mapCourt(0.05, t);
-      const b = mapCourt(0.95, t);
+    // subtle floor shine
+    const shine = ctx.createRadialGradient(w*0.5,h*0.58, 10, w*0.5,h*0.58, w*0.65);
+    shine.addColorStop(0,'rgba(255,255,255,.06)');
+    shine.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=shine;
+    ctx.fill();
+
+    // court texture
+    ctx.globalAlpha=0.20;
+    ctx.strokeStyle='rgba(255,255,255,.12)';
+    ctx.lineWidth=Math.max(1,w*0.0012);
+    for(let i=0;i<18;i++){
+      const t=i/17;
+      const a=mapCourt(0.05,t), b=mapCourt(0.95,t);
       ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha=1;
 
-    // Court lines
-    ctx.strokeStyle = 'rgba(235,245,255,.70)';
-    ctx.lineWidth = Math.max(1.2, w * 0.0016);
-    ctx.lineJoin = 'round';
+    // lines
+    ctx.strokeStyle='rgba(235,245,255,.72)';
+    ctx.lineWidth=Math.max(1.2,w*0.0018);
+    ctx.lineJoin='round';
 
-    // Outer boundary
+    // boundary
     ctx.beginPath();
     ctx.moveTo(c.x0,c.y0); ctx.lineTo(c.x1,c.y1); ctx.lineTo(c.x2,c.y2); ctx.lineTo(c.x3,c.y3); ctx.closePath();
     ctx.stroke();
 
-    // Center line + service lines (approx)
-    const midTop = mapCourt(0.50, 0.00);
-    const midBot = mapCourt(0.50, 1.00);
-    ctx.globalAlpha = 0.75;
-    ctx.beginPath(); ctx.moveTo(midTop.x, midTop.y); ctx.lineTo(midBot.x, midBot.y); ctx.stroke();
+    // center line
+    ctx.globalAlpha=0.70;
+    const midT=mapCourt(0.5,0), midB=mapCourt(0.5,1);
+    ctx.beginPath(); ctx.moveTo(midT.x,midT.y); ctx.lineTo(midB.x,midB.y); ctx.stroke();
 
-    const netY = 0.50;
-    const netL = mapCourt(0.00, netY);
-    const netR = mapCourt(1.00, netY);
-    ctx.globalAlpha = 0.95;
-    ctx.strokeStyle = 'rgba(255,255,255,.55)';
-    ctx.lineWidth = Math.max(1.2, w * 0.0022);
-    ctx.beginPath(); ctx.moveTo(netL.x, netL.y); ctx.lineTo(netR.x, netR.y); ctx.stroke();
+    // net
+    ctx.globalAlpha=0.95;
+    const netY=0.5, netL=mapCourt(0,netY), netR=mapCourt(1,netY);
+    ctx.strokeStyle='rgba(255,255,255,.55)';
+    ctx.lineWidth=Math.max(1.3,w*0.0024);
+    ctx.beginPath(); ctx.moveTo(netL.x,netL.y); ctx.lineTo(netR.x,netR.y); ctx.stroke();
 
-    // Short service lines
-    ctx.globalAlpha = 0.65;
-    ctx.lineWidth = Math.max(1.0, w * 0.0014);
-    const ss1 = mapCourt(0.00, 0.34), ss2 = mapCourt(1.00, 0.34);
-    const ss3 = mapCourt(0.00, 0.66), ss4 = mapCourt(1.00, 0.66);
-    ctx.beginPath(); ctx.moveTo(ss1.x, ss1.y); ctx.lineTo(ss2.x, ss2.y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ss3.x, ss3.y); ctx.lineTo(ss4.x, ss4.y); ctx.stroke();
+    // net mesh hint
+    ctx.globalAlpha=0.18;
+    ctx.lineWidth=Math.max(1,w*0.0010);
+    for(let i=0;i<14;i++){
+      const t=i/13;
+      const a=lerp2(netL, netR, t);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y-10); ctx.lineTo(a.x,a.y+10); ctx.stroke();
+    }
 
     ctx.restore();
   }
 
-  function drawPlayer(nx, ny, label, highlight=0) {
-    const p = mapCourt(nx, ny);
-    const r = Math.max(7, scene.w * 0.008);
+  function drawPlayer(nx,ny,label,active=false){
+    const p=mapCourt(nx,ny);
+    const r=Math.max(7, scene.court.w*0.008);
     ctx.save();
     // shadow
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = 'black';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y + r*0.9, r*0.9, r*0.35, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=0.22;
+    ctx.fillStyle='black';
+    ctx.beginPath(); ctx.ellipse(p.x, p.y + r*0.95, r*0.95, r*0.36, 0, 0, Math.PI*2); ctx.fill();
+
     // body
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = highlight ? 'rgba(140,210,255,.90)' : 'rgba(235,245,255,.85)';
-    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.fillStyle= active ? 'rgba(140,210,255,.92)' : 'rgba(235,245,255,.86)';
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
+
     // label
-    ctx.fillStyle = 'rgba(0,0,0,.65)';
-    ctx.font = `${Math.max(10, scene.w*0.012)}px ui-sans-serif, system-ui`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, p.x, p.y+0.5);
+    ctx.fillStyle='rgba(0,0,0,.65)';
+    ctx.font=`${Math.max(10, scene.court.w*0.012)}px ui-sans-serif, system-ui`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label,p.x,p.y+0.5);
     ctx.restore();
   }
 
-  function drawShuttle(nx, ny, z, glow=0.0) {
-    const p = mapCourt(nx, ny);
-    const r = Math.max(4, scene.w * 0.0045) * (1 + z*0.12);
+  function drawShuttle(nx,ny,z,smash=false){
+    const p=mapCourt(nx,ny);
+    const r=Math.max(4, scene.court.w*0.0048) * (1 + z*0.10);
+
     ctx.save();
-    // glow
-    if (glow > 0) {
-      ctx.globalAlpha = 0.20 + glow*0.35;
-      ctx.fillStyle = 'rgba(255,255,255,.95)';
-      ctx.beginPath(); ctx.arc(p.x, p.y, r*3.2, 0, Math.PI*2); ctx.fill();
+    if (smash){
+      ctx.globalAlpha=0.22;
+      ctx.fillStyle='rgba(255,255,255,.95)';
+      ctx.beginPath(); ctx.arc(p.x,p.y,r*3.5,0,Math.PI*2); ctx.fill();
     }
-    // shuttle (simple)
-    ctx.globalAlpha = 0.95;
-    ctx.fillStyle = 'rgba(255,255,255,.92)';
-    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI*2); ctx.fill();
-    ctx.globalAlpha = 0.45;
-    ctx.strokeStyle = 'rgba(255,255,255,.65)';
-    ctx.lineWidth = Math.max(1, scene.w*0.0012);
+    // shuttle head
+    ctx.globalAlpha=0.95;
+    ctx.fillStyle='rgba(255,255,255,.92)';
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
+    // feathers (simple)
+    ctx.globalAlpha=0.45;
+    ctx.strokeStyle='rgba(255,255,255,.65)';
+    ctx.lineWidth=Math.max(1, scene.court.w*0.0012);
     ctx.beginPath();
     ctx.moveTo(p.x-r*1.2, p.y-r*0.6);
-    ctx.lineTo(p.x+r*1.3, p.y+r*0.5);
+    ctx.lineTo(p.x+r*1.4, p.y+r*0.5);
     ctx.stroke();
     ctx.restore();
   }
 
-  function renderFrame(highlightA=0, highlightB=0, shuttleGlow=0) {
+  function renderStatic(){
     drawCourt();
-    drawPlayer(scene.A.x, scene.A.y, 'A', highlightA);
-    drawPlayer(scene.B.x, scene.B.y, 'B', highlightB);
-    drawShuttle(scene.shuttle.x, scene.shuttle.y, scene.shuttle.z, shuttleGlow);
+    drawPlayer(scene.A.x, scene.A.y, 'A', false);
+    drawPlayer(scene.B.x, scene.B.y, 'B', false);
+    drawShuttle(scene.shuttle.x, scene.shuttle.y, scene.shuttle.z, false);
   }
 
-  // ----- Animation helpers
-  function animateRally(sk, simResult) {
-    // Create a simple rally animation: shuttle travels between players (top/bottom)
-    // Rally length affects number of exchanges. Smash increases speed and glow.
-    const exchanges = clamp(simResult.rally, 2, 20);
-    const smashAvg = (sk.A.sm + sk.B.sm)/2;
+  // ---- Rally animation driven by shot list
+  function planRallyAnimation(sk, outcome){
+    const ex = clamp(outcome.exchanges, 2, 26);
+    const smashBiasA = sk.A.sm/100;
+    const smashBiasB = sk.B.sm/100;
     const speedAvg = (sk.A.spd + sk.B.spd)/2;
 
-    // Timing: higher speed => shorter segments, longer rally => more segments
-    const baseSeg = lerp(0.42, 0.22, clamp(speedAvg/100, 0, 1));
-    const segDur = clamp(baseSeg * lerp(1.05, 0.85, clamp(smashAvg/100,0,1)), 0.16, 0.55);
+    // segment duration: faster players => faster pace
+    const segBase = lerp(0.42, 0.22, clamp(speedAvg/100,0,1));
 
-    // Random target points (realistic-ish placement)
-    function targetFor(sideTop){
-      // sideTop: true means B hits towards A half (bottom), else A hits towards B (top)
-      const y = sideTop ? lerp(0.62, 0.92, Math.random()) : lerp(0.08, 0.38, Math.random());
-      const x = lerp(0.18, 0.82, Math.random());
-      return {x,y};
+    function targetFor(topHitter, shot){
+      // topHitter true => B hits to bottom half (A)
+      // distribute targets by shot type
+      let yMin,yMax,xMin=0.18,xMax=0.82;
+      if (topHitter){
+        // towards bottom
+        if (shot==='net' || shot==='drop') { yMin=0.52; yMax=0.70; }
+        else if (shot==='smash' || shot==='drive') { yMin=0.62; yMax=0.92; }
+        else { yMin=0.58; yMax=0.88; } // clear
+      } else {
+        // towards top
+        if (shot==='net' || shot==='drop') { yMin=0.30; yMax=0.48; }
+        else if (shot==='smash' || shot==='drive') { yMin=0.08; yMax=0.38; }
+        else { yMin=0.12; yMax=0.42; }
+      }
+      // sidelines a bit more often on smashes/drives
+      const side = (shot==='smash'||shot==='drive') ? 0.12 : 0.06;
+      xMin = 0.18 - side; xMax = 0.82 + side;
+      return { x: clamp(lerp(xMin,xMax,Math.random()), 0.06, 0.94),
+               y: clamp(lerp(yMin,yMax,Math.random()), 0.06, 0.94) };
     }
 
-    // Start from server side (random)
-    let fromTop = Math.random() < 0.5; // who hits first
-    let cur = {x:scene.shuttle.x, y:scene.shuttle.y};
+    // build shot plan (we don't need exact sim shot list; approximate visually)
+    let cur = {x:0.50,y:0.50};
+    let topHitter = (match.server === 'B'); // if B serves, first hitter top
     let plan = [];
-    for (let i=0;i<exchanges;i++){
-      const nxt = targetFor(fromTop);
-      const isSmash = Math.random() < lerp(0.10, 0.38, clamp(smashAvg/100,0,1));
-      plan.push({ from:{...cur}, to:nxt, dur: segDur * (isSmash ? 0.75 : 1.0), smash:isSmash, hitterTop: fromTop });
-      cur = nxt;
-      fromTop = !fromTop;
+    for (let i=0;i<ex;i++){
+      const hitter = topHitter ? 'B' : 'A';
+      const smashP = hitter==='A' ? lerp(0.10, 0.40, smashBiasA) : lerp(0.10, 0.40, smashBiasB);
+      const shot = pickWeighted([
+        {v:'smash', w: smashP},
+        {v:'drive', w: 0.22},
+        {v:'drop',  w: 0.18},
+        {v:'net',   w: 0.14},
+        {v:'clear', w: 0.22}
+      ]);
+      const to = targetFor(topHitter, shot);
+      const dur = segBase * (shot==='smash' ? 0.70 : shot==='drive' ? 0.82 : shot==='net' ? 1.10 : 1.0);
+      plan.push({from:{...cur}, to, dur, shot, hitter});
+      cur = to;
+      topHitter = !topHitter;
     }
 
-    // Final: point ends. Winner hits last "decisive" shot (if winnerBias)
-    const winA = simResult.winA;
-    const lastHitterTop = plan.length ? plan[plan.length-1].hitterTop : false;
-    const winnerIsTop = winA ? false : true; // A bottom => not top; B top => top
-    // If winner isn't last hitter in plan, add one more decisive shot
-    if (plan.length && lastHitterTop !== winnerIsTop){
-      const nxt = targetFor(winnerIsTop);
-      plan.push({ from:{...cur}, to:nxt, dur: segDur*0.70, smash:true, hitterTop: winnerIsTop });
+    // final is decisive shot type from outcome
+    if (plan.length){
+      plan[plan.length-1].shot = outcome.endShot;
     }
+    return plan;
+  }
 
+  async function animate(plan, outcome){
     match.busy = true;
-    let segIndex = 0;
+    let idx = 0;
     let segT = 0;
-
-    const start = performance.now();
-    let lastTime = start;
+    let lastTime = performance.now();
 
     function tick(now){
       const dt = (now - lastTime) * 0.001;
       lastTime = now;
 
-      const seg = plan[segIndex];
+      const seg = plan[idx];
       if (!seg){
         match.busy = false;
+        renderStatic();
         return;
       }
 
       segT += dt;
       const t = clamp(segT / seg.dur, 0, 1);
-      const ease = t*t*(3-2*t);
+      const e = smooth(t);
 
-      scene.shuttle.x = lerp(seg.from.x, seg.to.x, ease);
-      scene.shuttle.y = lerp(seg.from.y, seg.to.y, ease);
-      // pseudo "arc"
-      const arc = Math.sin(Math.PI * ease);
-      const arcHeight = seg.smash ? 0.7 : 1.0;
-      scene.shuttle.z = arc * 1.2 * arcHeight;
+      scene.shuttle.x = lerp(seg.from.x, seg.to.x, e);
+      scene.shuttle.y = lerp(seg.from.y, seg.to.y, e);
+      // arc height by shot
+      const arc = Math.sin(Math.PI*e);
+      const arcMul = (seg.shot==='clear')? 1.35 : (seg.shot==='drop')? 0.85 : (seg.shot==='net')? 0.55 : (seg.shot==='smash')? 0.75 : 0.95;
+      scene.shuttle.z = arc * 1.2 * arcMul;
 
-      // hitter highlight
-      const hA = seg.hitterTop ? 0 : 1;
-      const hB = seg.hitterTop ? 1 : 0;
-      const glow = seg.smash ? 0.8 : 0.25;
-
-      renderFrame(hA, hB, glow);
+      drawCourt();
+      drawPlayer(scene.A.x, scene.A.y, 'A', seg.hitter==='A');
+      drawPlayer(scene.B.x, scene.B.y, 'B', seg.hitter==='B');
+      drawShuttle(scene.shuttle.x, scene.shuttle.y, scene.shuttle.z, seg.shot==='smash');
 
       if (t >= 1){
-        segIndex++;
+        idx++;
         segT = 0;
-        // tiny settle at end
-        if (segIndex >= plan.length){
-          // settle shuttle near net
-          scene.shuttle.x = 0.50;
-          scene.shuttle.y = 0.50;
-          scene.shuttle.z = 0;
-          renderFrame(0,0,0);
+        if (idx >= plan.length){
           match.busy = false;
+          // settle
+          scene.shuttle.x = 0.50; scene.shuttle.y = 0.50; scene.shuttle.z = 0;
+          renderStatic();
           return;
         }
       }
       requestAnimationFrame(tick);
     }
-
     requestAnimationFrame(tick);
   }
 
-  // ----- Point play
-  function playOnePoint() {
+  // ---- Play one rally with rules + serve + game over
+  function playOne(){
     if (match.busy) return;
+    if (isGameOver(match.a, match.b)) return;
 
     const sk = readSkills();
-    const res = simulatePoint(sk);
+    const outcome = simulateRally(sk);
 
-    // Update UI meta
-    ui.rallyLen.textContent = `Rally: ${res.rally}`;
-    ui.reason.textContent = `Reason: ${res.reason}`;
+    // update widgets
+    ui.rallyLen.textContent = `${outcome.exchanges} exchanges`;
+    ui.endShot.textContent = outcome.endShot;
+    ui.reason.textContent = outcome.reason;
 
-    const winner = res.winA ? 'A' : 'B';
+    // scoring
+    const winner = outcome.winner;
+    if (winner === 'A') match.a++; else match.b++;
+
+    // serve: winner serves next
+    match.server = winner;
+
+    // status line + log
     ui.lastPoint.textContent = `${winner} won`;
+    ui.statusLine.textContent = isGameOver(match.a, match.b)
+      ? `Game over • ${match.a > match.b ? 'A' : 'B'} wins`
+      : `${winner} won rally • ${winner} to serve`;
 
-    // Score
-    if (res.winA) match.scoreA++; else match.scoreB++;
+    const pillClass = (outcome.reason==='Winner') ? 'good' : (outcome.reason==='Unforced error') ? 'bad' : '';
+    addLog(
+      `<div>
+        <span class="pill">Rally</span>
+        <b>${winner}</b> won •
+        <span class="muted">${outcome.exchanges} exchanges</span> •
+        <span class="muted">end: ${outcome.endShot}</span> •
+        <span class="pill ${pillClass}">${outcome.reason}</span>
+      </div>`
+    );
+
     updateScoreUI();
+    updateChances();
 
-    // Log
-    const pA = Math.round(res.pA*100);
-    const line = `<div><span class="pill">Point</span><b>${winner}</b> won • rally <b>${res.rally}</b> • <span class="muted">${res.reason}</span> • <span class="muted">win chance A ${pA}%</span></div>`;
-    addLog(line);
-
-    // Animate
-    animateRally(sk, res);
-
-    // Refresh next-point chance after slight delay (so it feels responsive)
-    setTimeout(updateChances, 80);
+    // animate
+    const plan = planRallyAnimation(sk, outcome);
+    animate(plan, outcome);
   }
 
-  async function autoPoints(n=10) {
+  async function auto(n=10){
     if (match.busy) return;
     for (let i=0;i<n;i++){
-      playOnePoint();
-      // wait until animation finished
-      await waitUntil(() => !match.busy, 6000);
+      if (isGameOver(match.a, match.b)) break;
+      playOne();
+      await waitUntil(() => !match.busy, 7000);
       await sleep(120);
     }
   }
 
-  function resetMatch(){
-    match.scoreA = 0; match.scoreB = 0;
+  function reset(){
+    match.a = 0; match.b = 0;
+    match.server = 'A';
+    match.busy = false;
+
+    ui.statusLine.textContent = 'Ready';
+    ui.rallyLen.textContent = '—';
+    ui.endShot.textContent = '—';
     ui.lastPoint.textContent = '—';
-    ui.rallyLen.textContent = 'Rally: —';
-    ui.reason.textContent = 'Reason: —';
-    ui.log.innerHTML = `<div class="muted">Adjust skills, then press <b>Play point</b>.</div>`;
+    ui.reason.textContent = '—';
+
+    ui.log.innerHTML = `<div class="muted">Set skills, then press <b>Play rally</b>. Rules: 21 points, win by 2, cap 30.</div>`;
     updateScoreUI();
     updateChances();
-    scene.A.x = 0.55; scene.A.y = 0.82;
-    scene.B.x = 0.45; scene.B.y = 0.18;
+
+    scene.A.x = 0.55; scene.A.y = 0.84;
+    scene.B.x = 0.45; scene.B.y = 0.16;
     scene.shuttle.x = 0.50; scene.shuttle.y = 0.50; scene.shuttle.z = 0;
-    renderFrame(0,0,0);
+    renderStatic();
   }
 
   function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -798,25 +1005,13 @@
     });
   }
 
-  ui.play.addEventListener('click', playOnePoint);
-  ui.auto.addEventListener('click', () => autoPoints(10));
-  ui.reset.addEventListener('click', resetMatch);
+  ui.play.addEventListener('click', playOne);
+  ui.auto.addEventListener('click', () => auto(10));
+  ui.reset.addEventListener('click', reset);
 
-  // Init
+  // init
   updateVals();
-  resetMatch();
-
-  // Render loop fallback (keeps court crisp on resize)
-  let lastW = 0, lastH = 0;
-  function idle() {
-    const w = ui.cv.width, h = ui.cv.height;
-    if (w !== lastW || h !== lastH) {
-      lastW = w; lastH = h;
-      renderFrame(0,0,0);
-    }
-    requestAnimationFrame(idle);
-  }
-  requestAnimationFrame(idle);
+  reset();
 })();
 </script>
 </body>
