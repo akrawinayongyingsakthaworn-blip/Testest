@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ocean Wave Simulation</title>
+  <style>
+    :root{
+      --bg1:#06121a;
+      --bg2:#0a2531;
+      --panel: rgba(8, 20, 26, .55);
+      --panel2: rgba(10, 26, 34, .35);
+      --stroke: rgba(255,255,255,.10);
+      --text: rgba(235,245,255,.92);
+      --muted: rgba(235,245,255,.65);
+      --glow: rgba(140, 220, 255, .14);
+      --accent: rgba(140, 220, 255, .85);
+      --accent2: rgba(80, 180, 255, .55);
+      --shadow: rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(80,180,255,.10), transparent 55%),
+                  radial-gradient(900px 600px at 70% 30%, rgba(120,255,220,.06), transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+    #app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+    header{
+      position:relative;
+      padding:18px 18px 10px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      z-index:3;
+      pointer-events:none;
+    }
+    .title{
+      pointer-events:auto;
+      user-select:none;
+    }
+    .title h1{
+      margin:0;
+      font-weight:650;
+      letter-spacing:.2px;
+      font-size:18px;
+      text-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .title p{
+      margin:6px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      max-width:560px;
+      line-height:1.35;
+    }
+    .hud{
+      pointer-events:auto;
+      display:flex;
+      align-items:stretch;
+      gap:12px;
+    }
+    .panel{
+      width:min(440px, calc(100vw - 36px));
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border:1px solid var(--stroke);
+      box-shadow: 0 12px 50px var(--shadow), inset 0 1px 0 rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:12px 12px 10px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .panel .row{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      align-items:center;
+      gap:10px;
+      margin:8px 0;
+    }
+    label{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .val{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      color:rgba(235,245,255,.85);
+      padding:6px 9px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(5, 12, 16, .28);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      min-width:74px;
+      text-align:right;
+      user-select:none;
+    }
+    input[type="range"]{
+      width:100%;
+      appearance:none;
+      height:18px;
+      background: transparent;
+      outline:none;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:8px;
+      border-radius:99px;
+      background: linear-gradient(90deg, rgba(140,220,255,.25), rgba(80,180,255,.10));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      appearance:none;
+      width:18px; height:18px;
+      border-radius:50%;
+      margin-top:-6px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(140,220,255,.55));
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 0 4px rgba(140,220,255,.10);
+    }
+    input[type="range"]::-moz-range-track{
+      height:8px;
+      border-radius:99px;
+      background: linear-gradient(90deg, rgba(140,220,255,.25), rgba(80,180,255,.10));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width:18px; height:18px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(140,220,255,.55));
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 0 4px rgba(140,220,255,.10);
+    }
+    .buttons{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      margin-top:10px;
+    }
+    button{
+      flex:1;
+      cursor:pointer;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(8, 20, 26, .25);
+      color:rgba(235,245,255,.9);
+      padding:10px 10px;
+      font-size:12px;
+      letter-spacing:.2px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+    }
+    button:hover{
+      background: rgba(10, 26, 34, .35);
+      border-color: rgba(140,220,255,.22);
+    }
+    button:active{ transform: translateY(1px); }
+    .hint{
+      pointer-events:none;
+      position:absolute;
+      left:18px;
+      bottom:14px;
+      font-size:12px;
+      color:rgba(235,245,255,.55);
+      text-shadow: 0 10px 30px rgba(0,0,0,.35);
+      z-index:3;
+      user-select:none;
+    }
+    canvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:1;
+    }
+    .vignette{
+      position:absolute;
+      inset:-2px;
+      pointer-events:none;
+      z-index:2;
+      background:
+        radial-gradient(900px 420px at 50% -10%, rgba(255,255,255,.06), transparent 55%),
+        radial-gradient(900px 560px at 50% 130%, rgba(0,0,0,.35), transparent 60%),
+        radial-gradient(1200px 900px at 50% 50%, transparent 55%, rgba(0,0,0,.35));
+      mix-blend-mode: screen;
+      opacity:.95;
+    }
+    @media (max-width: 820px){
+      header{flex-direction:column; align-items:stretch;}
+      .hud{justify-content:flex-start}
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <canvas id="c"></canvas>
+  <div class="vignette"></div>
+
+  <header>
+    <div class="title">
+      <h1>Ocean Wave Simulation</h1>
+      <p>Real-time procedural ocean surface with calming lighting. Adjust wind speed, wave height, and lighting for different sea states.</p>
+    </div>
+
+    <div class="hud">
+      <div class="panel" role="region" aria-label="Controls">
+        <div class="row">
+          <label>
+            Wind speed
+            <input id="wind" type="range" min="0" max="20" step="0.1" value="9.0" />
+          </label>
+          <div class="val" id="windVal">9.0 m/s</div>
+        </div>
+
+        <div class="row">
+          <label>
+            Wave height
+            <input id="height" type="range" min="0.1" max="3.5" step="0.01" value="1.15" />
+          </label>
+          <div class="val" id="heightVal">1.15 m</div>
+        </div>
+
+        <div class="row">
+          <label>
+            Lighting
+            <input id="light" type="range" min="0" max="1" step="0.01" value="0.62" />
+          </label>
+          <div class="val" id="lightVal">0.62</div>
+        </div>
+
+        <div class="buttons">
+          <button id="calm" type="button">Calm</button>
+          <button id="breezy" type="button">Breezy</button>
+          <button id="storm" type="button">Storm</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="hint">Tip: drag sliders slowly for smoother transitions.</div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  const ui = {
+    wind: document.getElementById('wind'),
+    height: document.getElementById('height'),
+    light: document.getElementById('light'),
+    windVal: document.getElementById('windVal'),
+    heightVal: document.getElementById('heightVal'),
+    lightVal: document.getElementById('lightVal'),
+    calm: document.getElementById('calm'),
+    breezy: document.getElementById('breezy'),
+    storm: document.getElementById('storm'),
+  };
+
+  // --- Utilities
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const lerp  = (a, b, t) => a + (b - a) * t;
+  const smoothstep = (t) => t * t * (3 - 2 * t);
+
+  function resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.floor(window.innerWidth * dpr);
+    const h = Math.floor(window.innerHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w; canvas.height = h;
+    }
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(1,1);
+  }
+  window.addEventListener('resize', resize, { passive:true });
+  resize();
+
+  // --- Ocean model: multi-component Gerstner-like sum (screen-space, heightfield + shading)
+  // We simulate a heightfield z(x,y,t) = Σ A_i sin(k·x - ωt + φ_i) plus choppy term.
+  // Normals from partial derivatives for lighting.
+  const waves = [];
+  const WAVE_COUNT = 12;
+
+  function seedWaves() {
+    waves.length = 0;
+    for (let i = 0; i < WAVE_COUNT; i++) {
+      // distributed directions, wavelengths, and steepness
+      const dir = (i / WAVE_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.35;
+      const wl  = lerp(28, 360, Math.pow(i / (WAVE_COUNT - 1), 1.35)); // px in screen-space
+      const k   = (Math.PI * 2) / wl;
+      const speed = lerp(0.6, 1.8, Math.random()); // base, scaled by wind later
+      const phi = Math.random() * Math.PI * 2;
+      waves.push({ dir, wl, k, speed, phi, weight: lerp(0.7, 1.35, Math.random()) });
+    }
+  }
+  seedWaves();
+
+  // --- State (smoothed targets for calming UI)
+  const state = {
+    windTarget: parseFloat(ui.wind.value),
+    heightTarget: parseFloat(ui.height.value),
+    lightTarget: parseFloat(ui.light.value),
+    wind: 0, height: 0, light: 0,
+    t0: performance.now(),
+  };
+
+  function setPreset(wind, height, light) {
+    state.windTarget = wind;
+    state.heightTarget = height;
+    state.lightTarget = light;
+    ui.wind.value = wind;
+    ui.height.value = height;
+    ui.light.value = light;
+    updateLabels();
+  }
+
+  ui.calm.addEventListener('click', () => setPreset(4.5, 0.55, 0.72));
+  ui.breezy.addEventListener('click', () => setPreset(9.0, 1.15, 0.62));
+  ui.storm.addEventListener('click', () => setPreset(15.0, 2.45, 0.48));
+
+  function updateLabels() {
+    ui.windVal.textContent = `${parseFloat(ui.wind.value).toFixed(1)} m/s`;
+    ui.heightVal.textContent = `${parseFloat(ui.height.value).toFixed(2)} m`;
+    ui.lightVal.textContent = `${parseFloat(ui.light.value).toFixed(2)}`;
+  }
+
+  ['wind','height','light'].forEach(k => {
+    ui[k].addEventListener('input', () => {
+      state[`${k}Target`] = parseFloat(ui[k].value);
+      updateLabels();
+    }, { passive:true });
+  });
+  updateLabels();
+
+  // --- Rendering parameters
+  function draw(now) {
+    const w = canvas.width, h = canvas.height;
+    const t = (now - state.t0) * 0.001;
+
+    // Smooth parameters for calm transitions
+    state.wind = lerp(state.wind, state.windTarget, 0.045);
+    state.height = lerp(state.height, state.heightTarget, 0.04);
+    state.light = lerp(state.light, state.lightTarget, 0.05);
+
+    // "Wind" influences wave speed and chop
+    const wind = state.wind;
+    const seaHeight = state.height; // meters (conceptual) -> px scaling below
+    const lighting = state.light;
+
+    // Resolution: dynamic grid based on screen size
+    const dpr = (window.devicePixelRatio || 1);
+    const scale = 1; // already in device pixels
+    const minStep = 5 * Math.min(2, dpr);
+    const maxStep = 12 * Math.min(2, dpr);
+    const step = clamp(lerp(maxStep, minStep, clamp(wind / 16, 0, 1)), minStep, maxStep);
+
+    // Height scale: more height => higher px amplitude, but damp with perspective
+    const ampPx = lerp(10, 42, clamp(seaHeight / 3.5, 0, 1));
+
+    // Sky gradient
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, `rgb(5, 15, 22)`);
+    sky.addColorStop(0.32, `rgb(7, 30, 40)`);
+    sky.addColorStop(1, `rgb(7, 23, 30)`);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0,0,w,h);
+
+    // Horizon haze + glow
+    const horizonY = h * 0.30;
+    const haze = ctx.createLinearGradient(0, horizonY - h*0.10, 0, horizonY + h*0.22);
+    haze.addColorStop(0, `rgba(160, 230, 255, ${0.06 + 0.10*lighting})`);
+    haze.addColorStop(0.45, `rgba(60, 160, 210, ${0.05 + 0.08*lighting})`);
+    haze.addColorStop(1, `rgba(0,0,0,0)`);
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, horizonY - h*0.12, w, h*0.5);
+
+    // Sun direction and specular "glint"
+    const sunAz = lerp(-0.35, 0.25, lighting);   // left->right
+    const sunEl = lerp(0.18, 0.42, lighting);    // low->high
+    const L = normalize3([Math.cos(sunAz)*Math.cos(sunEl), -Math.sin(sunEl), Math.sin(sunAz)*Math.cos(sunEl)]);
+    // View direction assumed towards screen
+    const V = normalize3([0, -0.10, -1]);
+
+    // Ocean base colors (deep + shallow tint)
+    const deep = [3, 18, 24];
+    const mid  = [6, 40, 52];
+    const crest= [120, 235, 255];
+
+    // Perspective mapping: y -> world scale
+    // Lower y => closer => larger spatial frequencies in screen-space.
+    function perspective(y) {
+      const yn = clamp((y - horizonY) / (h - horizonY), 0, 1);
+      const p = Math.pow(yn, 1.35);
+      return { yn, p, scale: lerp(0.55, 2.15, p) };
+    }
+
+    // We'll render as scanline tiles: for each y-row, compute banded water with x-steps.
+    const img = ctx.getImageData(0, 0, w, h);
+    const data = img.data;
+
+    // Precompute some wind-dependent tuning
+    const windN = clamp(wind / 20, 0, 1);
+    const chop = lerp(0.25, 0.95, windN);
+    const foamGain = lerp(0.35, 1.10, windN);
+    const baseRough = lerp(0.25, 0.55, 1 - lighting);
+
+    // Time scale: stronger wind => faster waves
+    const timeScale = lerp(0.85, 2.35, windN);
+
+    // Main loop (only ocean area below horizon)
+    // We compute height + normal from derivatives. Then shade with diffuse+specular+foam.
+    for (let y = Math.floor(horizonY); y < h; y += step) {
+      const { yn, p, scale: persp } = perspective(y);
+
+      // Vertical attenuation: distant waves smaller
+      const distAtten = lerp(0.18, 1.0, p);
+      const A = ampPx * distAtten;
+
+      // Water body color shifts with distance
+      const baseCol = mix3(mid, deep, clamp(1 - p, 0, 1) * 0.75);
+
+      // Band height
+      const yEnd = Math.min(h, y + step);
+      for (let x = 0; x < w; x += step) {
+        // Convert screen to "world" coords in px, with perspective scaling
+        const wx = (x - w * 0.5) / persp;
+        const wy = (y - horizonY) / persp;
+
+        // Sum wave components
+        let z = 0, dzdx = 0, dzdy = 0;
+
+        // Add a gentle long swell + smaller ripples
+        for (let i = 0; i < waves.length; i++) {
+          const wi = waves[i];
+          const dx = Math.cos(wi.dir), dy = Math.sin(wi.dir);
+          const k = wi.k;
+
+          // Effective amplitude distribution: more energy in mid components; wind scales the high-freq a bit.
+          const band = i / (waves.length - 1);
+          const energy = wi.weight * (0.55 + 0.65 * Math.exp(-Math.pow((band - 0.55)/0.33, 2)));
+          const hfBoost = lerp(0.85, 1.35, windN) * lerp(1.0, 0.7, band < 0.3 ? 1 : 0);
+          const Ai = A * 0.11 * energy * lerp(1.1, 0.55, band) * (band > 0.55 ? hfBoost : 1.0);
+
+          // Dispersion-ish: speed grows with wavelength; add wind influence
+          const phase = k * (dx * wx + dy * wy) - (wi.speed * lerp(0.8, 1.6, 1 - band) * timeScale) * t + wi.phi;
+
+          const s = Math.sin(phase);
+          const c = Math.cos(phase);
+
+          z += Ai * s;
+          dzdx += Ai * c * k * dx;
+          dzdy += Ai * c * k * dy;
+
+          // Choppy term (Gerstner-ish horizontal displacement approximation in shading)
+          // We don't displace geometry; we increase slope / contrast.
+          dzdx += chop * 0.08 * Ai * s * k * dx;
+          dzdy += chop * 0.08 * Ai * s * k * dy;
+        }
+
+        // Normals (heightfield): n = normalize([-dzdx, 1, -dzdy])
+        const N = normalize3([-dzdx, 1.0, -dzdy]);
+
+        // Lighting: diffuse and specular (Blinn-Phong)
+        const ndl = clamp(dot3(N, L), 0, 1);
+        const H = normalize3([L[0] + V[0], L[1] + V[1], L[2] + V[2]]);
+        const ndh = clamp(dot3(N, H), 0, 1);
+
+        const rough = baseRough + 0.18 * (1 - distAtten) + 0.12 * windN;
+        const shininess = lerp(120, 28, rough); // higher = tighter highlights
+
+        // Fresnel term for grazing angles (water sheen)
+        const fres = Math.pow(1 - clamp(dot3(N, [0,1,0]), 0, 1), 3) * 0.75;
+
+        // Foam: high curvature/slope + near crests
+        const slope = Math.sqrt(dzdx*dzdx + dzdy*dzdy);
+        const foam = clamp((slope * 0.35 + (z / (A + 1e-6)) * 0.6 - 0.35) * foamGain, 0, 1);
+        const foamSoft = smoothstep(clamp(foam, 0, 1));
+
+        // Color composition
+        const diff = lerp(0.18, 0.55, lighting) * ndl;
+        const spec = Math.pow(ndh, shininess) * lerp(0.35, 1.15, lighting) * (0.20 + 0.80*fres);
+
+        // Add subtle caustic-like shimmer using a low-frequency modulation
+        const shimmer = (Math.sin((wx*0.015 + t*0.9)) * Math.sin((wy*0.018 - t*0.7))) * 0.5 + 0.5;
+        const shimmerAmt = lerp(0.03, 0.10, lighting) * lerp(0.35, 1.0, distAtten);
+        const shimmerCol = mix3([80, 190, 220], [160, 240, 255], shimmer);
+
+        let col = add3(
+          mul3(baseCol, 1.0 + diff * 0.65),
+          mul3(shimmerCol, shimmerAmt)
+        );
+
+        // Specular tint slightly bluish
+        col = add3(col, [spec*210, spec*240, spec*255]);
+
+        // Foam / crest highlight
+        const foamCol = mix3(crest, [220, 250, 255], lighting);
+        col = mix3(col, foamCol, foamSoft * (0.40 + 0.35*lighting));
+
+        // Depth darkening with distance and wave troughs
+        const trough = clamp((-z / (A + 1e-6)) * 0.28, 0, 1);
+        col = mul3(col, 1.0 - (0.16 * (1 - distAtten) + 0.10*trough));
+
+        // Final clamp
+        const r = clamp(col[0], 0, 255);
+        const g = clamp(col[1], 0, 255);
+        const b = clamp(col[2], 0, 255);
+
+        // Fill tile (step x step) into ImageData
+        const xEnd = Math.min(w, x + step);
+        for (let yy = y; yy < yEnd; yy++) {
+          let idx = (yy * w + x) * 4;
+          for (let xx = x; xx < xEnd; xx++) {
+            data[idx] = r;
+            data[idx + 1] = g;
+            data[idx + 2] = b;
+            data[idx + 3] = 255;
+            idx += 4;
+          }
+        }
+      }
+    }
+
+    // Light atmospheric overlay: subtle film grain
+    const grainAmt = 7;
+    for (let i = 0; i < data.length; i += 4 * Math.floor(lerp(10, 6, windN))) {
+      const n = (Math.random() - 0.5) * grainAmt;
+      data[i] = clamp(data[i] + n, 0, 255);
+      data[i + 1] = clamp(data[i + 1] + n, 0, 255);
+      data[i + 2] = clamp(data[i + 2] + n, 0, 255);
+    }
+
+    ctx.putImageData(img, 0, 0);
+
+    // Subtle distant ocean line
+    ctx.save();
+    ctx.globalAlpha = 0.22 + 0.18 * lighting;
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + 1);
+    ctx.lineTo(w, horizonY + 1);
+    ctx.strokeStyle = 'rgba(180,240,255,.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    requestAnimationFrame(draw);
+  }
+
+  // Vector helpers
+  function dot3(a,b){ return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+  function normalize3(v){
+    const m = Math.hypot(v[0], v[1], v[2]) || 1;
+    return [v[0]/m, v[1]/m, v[2]/m];
+  }
+  function add3(a,b){ return [a[0]+b[0], a[1]+b[1], a[2]+b[2]]; }
+  function mul3(a,s){ return [a[0]*s, a[1]*s, a[2]*s]; }
+  function mix3(a,b,t){ return [lerp(a[0],b[0],t), lerp(a[1],b[1],t), lerp(a[2],b[2],t)]; }
+
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
