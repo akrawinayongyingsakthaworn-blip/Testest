@@ -1,1018 +1,1255 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Badminton sim</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>เงินเข้า-ออก & หนี้ (Thai Finance & Debt Tracker)</title>
   <style>
     :root{
-      --bg:#0f1418;
-      --panel: rgba(255,255,255,.06);
-      --panel2: rgba(255,255,255,.04);
-      --stroke: rgba(255,255,255,.10);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --accent: rgba(140, 210, 255, .92);
-      --good: rgba(120, 220, 160, .88);
-      --bad: rgba(255, 150, 150, .88);
-      --shadow: rgba(0,0,0,.45);
+      --bg:#0b1220;
+      --card:#111b2e;
+      --card2:#0f1930;
+      --text:#e8eefc;
+      --muted:#a9b7d6;
+      --line:rgba(255,255,255,.10);
+      --good:#3ddc97;
+      --warn:#ffd166;
+      --bad:#ff5c7a;
+      --accent:#7aa2ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --pad:14px;
+      --max: 980px;
+      --tap: 46px;
+      color-scheme: dark;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1100px 700px at 30% 10%, rgba(140,210,255,.10), transparent 55%),
-                  radial-gradient(900px 600px at 75% 30%, rgba(120,220,160,.06), transparent 60%),
-                  linear-gradient(180deg, #0b1013, var(--bg));
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(122,162,255,.22), transparent 55%),
+                  radial-gradient(900px 500px at 100% 10%, rgba(61,220,151,.16), transparent 55%),
+                  var(--bg);
       color:var(--text);
-      overflow:hidden;
     }
-    #app{height:100%; display:flex; flex-direction:column;}
+    .app{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: env(safe-area-inset-top) 14px calc(14px + env(safe-area-inset-bottom)) 14px;
+    }
     header{
-      padding:14px 14px 10px;
-      display:flex; gap:12px; align-items:flex-end; justify-content:space-between;
-      z-index:3; position:relative;
-    }
-    .title h1{margin:0; font-size:16px; font-weight:650; letter-spacing:.2px}
-    .title p{margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.35; max-width:620px}
-
-    .panel{
-      background: linear-gradient(180deg, var(--panel), var(--panel2));
-      border:1px solid var(--stroke);
-      border-radius:14px;
-      box-shadow: 0 14px 45px var(--shadow), inset 0 1px 0 rgba(255,255,255,.06);
+      position: sticky;
+      top:0;
+      z-index:10;
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(11,18,32,.70);
+      border-bottom: 1px solid var(--line);
+      margin: 0 -14px 12px -14px;
+      padding: 12px 14px;
     }
-
-    .controls{
-      width:min(560px, calc(100vw - 28px));
-      padding:12px 12px 10px;
-    }
-    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .slot{
-      padding:10px;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;
-      background: rgba(0,0,0,.12);
-    }
-    .slot h3{
-      margin:0 0 8px;
-      font-size:12px;
-      font-weight:650;
-      color: rgba(255,255,255,.86);
-      letter-spacing:.2px;
+    .topbar{
       display:flex;
+      gap:10px;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
     }
-    .badge{
-      font-size:11px;
-      color: rgba(255,255,255,.75);
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.12);
-      user-select:none;
-      white-space:nowrap;
+    .brand{
+      display:flex; flex-direction:column; gap:2px;
     }
-    .row{display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; margin:8px 0;}
-    label{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);}
-
-    input[type="range"]{width:100%; appearance:none; height:18px; background: transparent; outline:none;}
-    input[type="range"]::-webkit-slider-runnable-track{
-      height:8px; border-radius:999px;
-      background: linear-gradient(90deg, rgba(140,210,255,.22), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-    }
-    input[type="range"]::-webkit-slider-thumb{
-      appearance:none; width:18px; height:18px; border-radius:50%; margin-top:-6px;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.92), rgba(140,210,255,.55));
-      border:1px solid rgba(255,255,255,.25);
-      box-shadow: 0 8px 20px rgba(0,0,0,.35), 0 0 0 4px rgba(140,210,255,.10);
-    }
-    input[type="range"]::-moz-range-track{
-      height:8px; border-radius:999px;
-      background: linear-gradient(90deg, rgba(140,210,255,.22), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.08);
-    }
-    input[type="range"]::-moz-range-thumb{
-      width:18px; height:18px; border-radius:50%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.92), rgba(140,210,255,.55));
-      border:1px solid rgba(255,255,255,.25);
-      box-shadow: 0 8px 20px rgba(0,0,0,.35), 0 0 0 4px rgba(140,210,255,.10);
-    }
-
-    .val{
-      min-width:56px;
-      text-align:right;
-      font-size:12px;
-      font-variant-numeric: tabular-nums;
-      padding:6px 8px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.10);
-      color: rgba(255,255,255,.84);
-      user-select:none;
-    }
-
-    .buttons{display:flex; gap:10px; margin-top:10px;}
-    button{
-      flex:1;
-      cursor:pointer;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-      color: rgba(255,255,255,.90);
-      padding:10px 10px;
-      font-size:12px;
-      letter-spacing:.2px;
-      box-shadow: 0 10px 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
-      transition: transform .08s ease, background .2s ease, border-color .2s ease;
-    }
-    button:hover{ background: rgba(255,255,255,.06); border-color: rgba(140,210,255,.22); }
-    button:active{ transform: translateY(1px); }
-
-    main{
-      position:relative;
-      flex:1;
-      padding: 0 14px 14px;
-      display:grid;
-      grid-template-rows: 1fr auto;
-      gap:12px;
-      z-index:2;
-      min-height:0;
-    }
-
-    .stage{
-      position:relative;
-      overflow:hidden;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow: 0 14px 60px rgba(0,0,0,.35);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.08));
-      min-height: 360px;
-    }
-    canvas{position:absolute; inset:0; width:100%; height:100%;}
-    .overlay{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(900px 500px at 50% -10%, rgba(255,255,255,.06), transparent 60%),
-        radial-gradient(900px 600px at 50% 120%, rgba(0,0,0,.40), transparent 65%),
-        radial-gradient(1200px 900px at 50% 50%, transparent 60%, rgba(0,0,0,.35));
-      opacity:.95;
-      mix-blend-mode: screen;
-    }
-
-    .scoreOverlay{
-      position:absolute;
-      left:12px; right:12px; top:12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.22);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      z-index:5;
-      box-shadow: 0 14px 45px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
-      user-select:none;
-    }
-    .team{
-      display:flex;
-      align-items:baseline;
-      gap:10px;
-      min-width:140px;
-    }
-    .team .name{
-      font-size:12px;
-      color: rgba(255,255,255,.75);
-      letter-spacing:.2px;
-    }
-    .team .score{
-      font-size:20px;
-      font-weight:750;
-      font-variant-numeric: tabular-nums;
-      letter-spacing:.4px;
-    }
-    .serveDot{
-      width:10px; height:10px; border-radius:50%;
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow: 0 0 0 4px rgba(140,210,255,.10);
-      background: rgba(255,255,255,.25);
-      margin-left:6px;
-    }
-    .serveDot.on{ background: rgba(140,210,255,.85); }
-
-    .midInfo{
-      text-align:center;
-      flex:1;
-      min-width:120px;
-    }
-    .midInfo .small{font-size:11px; color: var(--muted)}
-    .midInfo .big{font-size:12px; margin-top:4px; color: rgba(255,255,255,.86)}
-
-    .bottom{
-      display:grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap:12px;
-      min-height:0;
-    }
-    .cards{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; padding:10px;}
-    .card{
-      padding:10px;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;
-      background: rgba(0,0,0,.12);
-    }
-    .card .k{font-size:11px; color:var(--muted); margin-bottom:6px;}
-    .card .v{font-size:14px; font-variant-numeric: tabular-nums; letter-spacing:.2px;}
-    .bar{
-      height:8px; border-radius:999px;
+    .brand b{font-size:16px; letter-spacing:.2px}
+    .brand small{color:var(--muted)}
+    .actions{display:flex; gap:8px; align-items:center}
+    button, .btn{
+      height: var(--tap);
+      padding: 0 14px;
+      border-radius: 12px;
+      border:1px solid var(--line);
       background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      overflow:hidden;
-      margin-top:8px;
+      color: var(--text);
+      font-weight: 600;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .bar > i{display:block; height:100%; width:50%; background: linear-gradient(90deg, rgba(140,210,255,.65), rgba(120,220,160,.55));}
-
-    .log{
-      padding:10px 12px;
-      overflow:auto;
-      font-size:12px;
-      line-height:1.35;
-      color: rgba(255,255,255,.84);
-      min-height:0;
+    button:active{transform: translateY(1px)}
+    .btn-primary{
+      background: linear-gradient(180deg, rgba(122,162,255,.95), rgba(122,162,255,.65));
+      border-color: rgba(122,162,255,.55);
+      color:#07102a;
     }
-    .log .muted{color:var(--muted)}
+    .btn-danger{
+      background: rgba(255,92,122,.12);
+      border-color: rgba(255,92,122,.35);
+      color: var(--text);
+    }
     .pill{
-      display:inline-block;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-      margin-right:6px;
-      font-size:11px;
-      color: rgba(255,255,255,.78);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
     }
-    .pill.good{border-color: rgba(120,220,160,.25); color: rgba(120,220,160,.88);}
-    .pill.bad{border-color: rgba(255,150,150,.25); color: rgba(255,150,150,.88);}
 
-    @media (max-width: 980px){
-      header{flex-direction:column; align-items:stretch;}
-      .grid{grid-template-columns:1fr;}
-      main{grid-template-rows: 1fr auto;}
-      .bottom{grid-template-columns: 1fr; }
-      .cards{grid-template-columns:1fr;}
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+    @media(min-width:860px){
+      .grid.two{grid-template-columns: 1.2fr .8fr}
+      .grid.cards{grid-template-columns: repeat(3,1fr)}
+      .grid.charts{grid-template-columns: 1fr 1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--pad);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing:.2px;
+      text-transform:none;
+    }
+    .hero{
+      display:flex;
+      gap:12px;
+      align-items: baseline;
+      justify-content:space-between;
+      flex-wrap: wrap;
+    }
+    .hero .value{
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      line-height:1.05;
+    }
+    .hero .sub{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    .hero .delta{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .value.good{color: var(--good)}
+    .value.bad{color: var(--bad)}
+    .value.warn{color: var(--warn)}
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 0;
+      border-top:1px dashed rgba(255,255,255,.10);
+    }
+    .row:first-of-type{border-top:none}
+    .row .label{
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .row .amt{
+      font-weight: 800;
+    }
+
+    .tabs{
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      margin: 14px -14px 0 -14px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      background: rgba(11,18,32,.75);
+    }
+    .tabbar{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:8px;
+    }
+    .tab{
+      height: 48px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      background: rgba(122,162,255,.18);
+      border-color: rgba(122,162,255,.35);
+      color: var(--text);
+    }
+
+    .sectionTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .sectionTitle h1{
+      font-size: 16px;
+      margin: 0;
+      letter-spacing:.2px;
+    }
+
+    .form{
+      display:grid;
+      gap:10px;
+    }
+    label{
+      display:grid;
+      gap:6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input, select, textarea{
+      width:100%;
+      min-height: var(--tap);
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      outline:none;
+      font-size: 15px;
+    }
+    textarea{min-height: 84px; resize: vertical}
+    input::placeholder, textarea::placeholder{color: rgba(169,183,214,.55)}
+    .twoCol{
+      display:grid;
+      gap:10px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .list{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+    .item{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 10px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+    .item .left{
+      display:grid;
+      gap:2px;
+      min-width: 0;
+    }
+    .item .left b{
+      font-size: 14px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .item .left small{color: var(--muted)}
+    .item .right{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .iconBtn{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .iconBtn.danger{
+      background: rgba(255,92,122,.10);
+      border-color: rgba(255,92,122,.30);
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.4;
+    }
+    .divider{
+      height:1px;
+      background: var(--line);
+      margin: 10px 0;
+    }
+
+    canvas{width:100%; height: 220px; display:block}
+    .chartWrap{
+      display:grid;
+      gap:8px;
+    }
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .dot{
+      width:10px; height:10px; border-radius: 99px; display:inline-block; margin-right:6px;
+      border:1px solid rgba(255,255,255,.25);
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 92px;
+      transform: translateX(-50%);
+      background: rgba(17,27,46,.92);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: var(--text);
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+    .sr-only{
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0;
     }
   </style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <div class="title">
-      <h1>Badminton sim</h1>
-      <p>Single match simulator (singles). Skills drive rally outcomes. Real rules: first to 21, win by 2, cap at 30. Serve stays with the rally winner.</p>
-    </div>
-
-    <div class="panel controls" role="region" aria-label="Controls">
-      <div class="grid">
-        <div class="slot">
-          <h3>Player A <span class="badge" id="aBadge">bottom court</span></h3>
-          <div class="row">
-            <label>Speed
-              <input id="aSpeed" type="range" min="0" max="100" step="1" value="65">
-            </label>
-            <div class="val" id="aSpeedVal">65</div>
-          </div>
-          <div class="row">
-            <label>Smash power
-              <input id="aSmash" type="range" min="0" max="100" step="1" value="62">
-            </label>
-            <div class="val" id="aSmashVal">62</div>
-          </div>
-          <div class="row">
-            <label>Intelligence
-              <input id="aIQ" type="range" min="0" max="100" step="1" value="58">
-            </label>
-            <div class="val" id="aIQVal">58</div>
-          </div>
+  <div class="app">
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <b>เงินเข้า-ออก & หนี้</b>
+          <small id="lastSaved">ยังไม่บันทึก</small>
         </div>
-
-        <div class="slot">
-          <h3>Player B <span class="badge" id="bBadge">top court</span></h3>
-          <div class="row">
-            <label>Speed
-              <input id="bSpeed" type="range" min="0" max="100" step="1" value="60">
-            </label>
-            <div class="val" id="bSpeedVal">60</div>
-          </div>
-          <div class="row">
-            <label>Smash power
-              <input id="bSmash" type="range" min="0" max="100" step="1" value="66">
-            </label>
-            <div class="val" id="bSmashVal">66</div>
-          </div>
-          <div class="row">
-            <label>Intelligence
-              <input id="bIQ" type="range" min="0" max="100" step="1" value="55">
-            </label>
-            <div class="val" id="bIQVal">55</div>
-          </div>
+        <div class="actions">
+          <span class="pill" id="monthLabel"></span>
+          <button class="btn-danger" id="resetBtn" type="button">ล้างข้อมูล</button>
         </div>
       </div>
+    </header>
 
-      <div class="buttons">
-        <button id="play">Play rally</button>
-        <button id="auto">Auto (10 rallies)</button>
-        <button id="reset">Reset game</button>
+    <!-- Views -->
+    <main id="viewRoot"></main>
+
+    <!-- Bottom tabs -->
+    <div class="tabs">
+      <div class="tabbar">
+        <div class="tab active" data-tab="dashboard">Dashboard</div>
+        <div class="tab" data-tab="income">Income</div>
+        <div class="tab" data-tab="debts">Debts</div>
+        <div class="tab" data-tab="plan">Plan</div>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main>
-    <div class="stage panel">
-      <div class="scoreOverlay" aria-label="Scoreboard">
-        <div class="team" aria-label="Player A score">
-          <div class="name">Player A <span class="serveDot" id="serveA" title="Serving"></span></div>
-          <div class="score" id="scoreA">0</div>
-        </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        <div class="midInfo">
-          <div class="small" id="ruleLine">Game to 21 • win by 2 • cap 30</div>
-          <div class="big" id="statusLine">Ready</div>
-        </div>
+  <script>
+    (function(){
+      "use strict";
 
-        <div class="team" style="justify-content:flex-end;" aria-label="Player B score">
-          <div class="score" id="scoreB">0</div>
-          <div class="name"><span class="serveDot" id="serveB" title="Serving"></span> Player B</div>
-        </div>
-      </div>
+      // ---------- Utilities ----------
+      const $ = (sel, el=document) => el.querySelector(sel);
+      const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
 
-      <canvas id="cv"></canvas>
-      <div class="overlay"></div>
-    </div>
+      const STORAGE_KEY = "thai_finance_debt_tracker_v1";
 
-    <div class="bottom">
-      <div class="panel">
-        <div class="cards">
+      function nowISO(){
+        const d = new Date();
+        const pad = n => String(n).padStart(2,"0");
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      function toNumber(v){
+        if (typeof v === "number") return isFinite(v) ? v : 0;
+        if (!v) return 0;
+        const s = String(v).replace(/[^\d.-]/g,"");
+        const n = parseFloat(s);
+        return isFinite(n) ? n : 0;
+      }
+
+      function formatTHB(n){
+        const x = Math.round(toNumber(n));
+        return x.toLocaleString("th-TH") + " ฿";
+      }
+
+      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+      function showToast(msg){
+        const t = $("#toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(()=>t.classList.remove("show"), 1400);
+      }
+
+      function uid(){
+        return Math.random().toString(16).slice(2) + Date.now().toString(16);
+      }
+
+      // ---------- Data Model ----------
+      const defaultState = {
+        meta: { lastSaved: null },
+        settings: {
+          month: new Date().toISOString().slice(0,7), // YYYY-MM
+          currency: "THB"
+        },
+        incomeMonthly: 0,
+        fixedExpenses: [
+          // {id, name, amount}
+          { id: uid(), name: "ค่าเช่า/ผ่อนบ้าน", amount: 0 },
+          { id: uid(), name: "ค่าน้ำ/ไฟ", amount: 0 }
+        ],
+        debts: [
+          // {id, type, name, balance, apr, minPayment, dueDay, note}
+          // type: "credit" | "installment"
+        ]
+      };
+
+      const store = {
+        load(){
+          try{
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return structuredClone(defaultState);
+            const parsed = JSON.parse(raw);
+
+            // Backfill missing keys safely
+            const st = structuredClone(defaultState);
+            Object.assign(st, parsed || {});
+            st.meta = Object.assign(st.meta, parsed?.meta || {});
+            st.settings = Object.assign(st.settings, parsed?.settings || {});
+            st.fixedExpenses = Array.isArray(parsed?.fixedExpenses) ? parsed.fixedExpenses : st.fixedExpenses;
+            st.debts = Array.isArray(parsed?.debts) ? parsed.debts : st.debts;
+
+            // Ensure ids exist
+            st.fixedExpenses = st.fixedExpenses.map(x => ({ id: x.id || uid(), name: x.name || "รายการ", amount: toNumber(x.amount) }));
+            st.debts = st.debts.map(d => ({
+              id: d.id || uid(),
+              type: d.type === "installment" ? "installment" : "credit",
+              name: d.name || (d.type === "installment" ? "สินเชื่อ/ผ่อนสินค้า" : "บัตรเครดิต"),
+              balance: toNumber(d.balance),
+              apr: toNumber(d.apr),
+              minPayment: toNumber(d.minPayment),
+              dueDay: clamp(Math.floor(toNumber(d.dueDay || 1)), 1, 31),
+              note: d.note || ""
+            }));
+            st.incomeMonthly = toNumber(st.incomeMonthly);
+            return st;
+          }catch(e){
+            console.warn("Load failed, using default", e);
+            return structuredClone(defaultState);
+          }
+        },
+        save(state){
+          state.meta.lastSaved = nowISO();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        },
+        reset(){
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      };
+
+      let state = store.load();
+
+      // ---------- Computations ----------
+      function totals(){
+        const income = toNumber(state.incomeMonthly);
+        const fixedTotal = state.fixedExpenses.reduce((s,x)=>s + toNumber(x.amount), 0);
+        const debtMinTotal = state.debts.reduce((s,d)=>s + toNumber(d.minPayment), 0);
+        const left = income - fixedTotal - debtMinTotal;
+        const debtBalanceTotal = state.debts.reduce((s,d)=>s + toNumber(d.balance), 0);
+        return { income, fixedTotal, debtMinTotal, left, debtBalanceTotal };
+      }
+
+      function cashTone(left){
+        if (left >= 3000) return "good";
+        if (left >= 0) return "warn";
+        return "bad";
+      }
+
+      function dueStatus(dueDay){
+        // Compare dueDay with today's day, rough indicator (no backend, per-month UI)
+        const today = new Date().getDate();
+        const diff = dueDay - today;
+        if (diff < 0) return { label: "เลยกำหนด", color: "var(--bad)" };
+        if (diff <= 3) return { label: "ใกล้ถึงกำหนด", color: "var(--warn)" };
+        return { label: "ปกติ", color: "var(--good)" };
+      }
+
+      // ---------- Rendering ----------
+      const viewRoot = $("#viewRoot");
+
+      function setMonthLabel(){
+        const m = state.settings.month || new Date().toISOString().slice(0,7);
+        const [yy, mm] = m.split("-");
+        const thMonths = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+        const label = `${thMonths[(+mm)-1]} ${(+yy)+543}`;
+        $("#monthLabel").textContent = label;
+      }
+
+      function setLastSaved(){
+        const s = state.meta.lastSaved;
+        $("#lastSaved").textContent = s ? `บันทึกล่าสุด: ${s}` : "ยังไม่บันทึก";
+      }
+
+      function renderDashboard(){
+        const t = totals();
+        const tone = cashTone(t.left);
+
+        const debtsSorted = [...state.debts].sort((a,b)=>toNumber(b.balance)-toNumber(a.balance));
+
+        viewRoot.innerHTML = `
+          <div class="grid two">
+            <section class="card">
+              <h2>เงินคงเหลือปลายเดือน</h2>
+              <div class="hero">
+                <div>
+                  <div class="value ${tone}">${formatTHB(t.left)}</div>
+                  <div class="sub">คำนวณจาก รายรับ - รายจ่ายคงที่ - ยอดชำระหนี้ขั้นต่ำ</div>
+                </div>
+                <div class="pill">อัปเดตแบบออฟไลน์ (localStorage)</div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="row">
+                <div class="label">รายรับต่อเดือน</div>
+                <div class="amt">${formatTHB(t.income)}</div>
+              </div>
+              <div class="row">
+                <div class="label">รายจ่ายคงที่รวม</div>
+                <div class="amt">${formatTHB(t.fixedTotal)}</div>
+              </div>
+              <div class="row">
+                <div class="label">ชำระหนี้ขั้นต่ำรวม</div>
+                <div class="amt">${formatTHB(t.debtMinTotal)}</div>
+              </div>
+              <div class="row">
+                <div class="label">ยอดหนี้คงค้างรวม</div>
+                <div class="amt">${formatTHB(t.debtBalanceTotal)}</div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="hint">
+                ทิป: ถ้า “เงินคงเหลือ” ติดลบ ให้เริ่มจากลดรายจ่ายคงที่ หรือเพิ่มการจ่ายหนี้แบบจัดลำดับ (ดูแท็บ Plan)
+              </div>
+            </section>
+
+            <section class="grid cards">
+              <div class="card">
+                <h2>Action</h2>
+                <div class="form">
+                  <button class="btn-primary" type="button" id="goIncome">แก้ไขรายรับ/รายจ่าย</button>
+                  <button class="btn-primary" type="button" id="goDebts">เพิ่ม/แก้ไขหนี้</button>
+                </div>
+                <div class="divider"></div>
+                <div class="hint">ทุกอย่างบันทึกอัตโนมัติบนเครื่องของคุณ</div>
+              </div>
+
+              <div class="card">
+                <h2>หนี้ใกล้ถึงกำหนด</h2>
+                <div class="list" id="dueList"></div>
+                <div class="hint" id="dueHint"></div>
+              </div>
+
+              <div class="card">
+                <h2>สรุปเร็ว</h2>
+                <div class="hint">ถ้าไม่มีหนี้ ลองเพิ่มเป้าหมายเงินเก็บใน Plan</div>
+                <div class="divider"></div>
+                <div class="row">
+                  <div class="label">จำนวนรายการรายจ่ายคงที่</div>
+                  <div class="amt">${state.fixedExpenses.length}</div>
+                </div>
+                <div class="row">
+                  <div class="label">จำนวนหนี้ทั้งหมด</div>
+                  <div class="amt">${state.debts.length}</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="grid charts" style="margin-top:12px">
+            <section class="card">
+              <div class="sectionTitle">
+                <h1>ภาพรวมเงิน (Pie)</h1>
+                <span class="pill">Fixed / Debt / Left</span>
+              </div>
+              <div class="chartWrap">
+                <canvas id="pieChart" width="640" height="260" aria-label="Spending pie chart"></canvas>
+                <div class="legend" id="pieLegend"></div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="sectionTitle">
+                <h1>ยอดหนี้คงค้าง (Bar)</h1>
+                <span class="pill">ตามรายการหนี้</span>
+              </div>
+              <div class="chartWrap">
+                <canvas id="barChart" width="640" height="260" aria-label="Debt bar chart"></canvas>
+                <div class="hint" id="barHint"></div>
+              </div>
+            </section>
+          </div>
+        `;
+
+        // Due list
+        const dueList = $("#dueList");
+        const soon = state.debts
+          .map(d => ({...d, status: dueStatus(d.dueDay)}))
+          .sort((a,b)=>{
+            // overdue first, then closest
+            const da = a.dueDay - new Date().getDate();
+            const db = b.dueDay - new Date().getDate();
+            return da - db;
+          })
+          .slice(0,4);
+
+        if (soon.length === 0){
+          $("#dueHint").textContent = "ยังไม่มีหนี้ในระบบ";
+        } else {
+          dueList.innerHTML = soon.map(d => {
+            return `
+              <div class="item">
+                <div class="left">
+                  <b>${escapeHTML(d.name)}</b>
+                  <small>กำหนดชำระวันที่ ${d.dueDay} • ${d.type === "credit" ? "บัตรเครดิต" : "ผ่อน/สินเชื่อ"}</small>
+                </div>
+                <div class="right">
+                  <span class="pill" style="border-color: ${d.status.color}; color:${d.status.color}">${d.status.label}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+          $("#dueHint").textContent = "";
+        }
+
+        // Buttons
+        $("#goIncome").addEventListener("click", ()=>setTab("income"));
+        $("#goDebts").addEventListener("click", ()=>setTab("debts"));
+
+        // Charts
+        drawMoneyPieChart($("#pieChart"), $("#pieLegend"));
+        drawDebtBarChart($("#barChart"), $("#barHint"));
+      }
+
+      function renderIncome(){
+        const t = totals();
+
+        viewRoot.innerHTML = `
           <div class="card">
-            <div class="k">Win chance (next rally)</div>
-            <div class="v"><span id="chanceA">50</span>% / <span id="chanceB">50</span>%</div>
-            <div class="bar" aria-hidden="true"><i id="chanceBar"></i></div>
+            <div class="sectionTitle">
+              <h1>รายรับ & รายจ่ายคงที่</h1>
+              <span class="pill">บันทึกอัตโนมัติ</span>
+            </div>
+
+            <div class="form">
+              <label>
+                รายรับต่อเดือน (บาท)
+                <input id="incomeInput" inputmode="numeric" placeholder="เช่น 35000" value="${state.incomeMonthly ? String(state.incomeMonthly) : ""}">
+              </label>
+
+              <div class="divider"></div>
+
+              <div class="sectionTitle">
+                <h1>รายการรายจ่ายคงที่</h1>
+                <button class="btn" type="button" id="addFixed">+ เพิ่มรายการ</button>
+              </div>
+
+              <div class="list" id="fixedList"></div>
+
+              <div class="divider"></div>
+
+              <div class="row">
+                <div class="label">รวมรายจ่ายคงที่</div>
+                <div class="amt">${formatTHB(t.fixedTotal)}</div>
+              </div>
+
+              <div class="hint">ตัวอย่างรายจ่ายคงที่: ค่าเช่า/ผ่อนบ้าน, ค่าน้ำไฟ, ค่าโทรศัพท์, ค่าเดินทาง, สมาชิก/ประกัน</div>
+            </div>
           </div>
+        `;
+
+        const incomeInput = $("#incomeInput");
+        incomeInput.addEventListener("input", ()=>{
+          state.incomeMonthly = toNumber(incomeInput.value);
+          autosave();
+          // Keep view summary fresh (cheap re-render)
+          renderIncome();
+          incomeInput.focus();
+          incomeInput.setSelectionRange(incomeInput.value.length, incomeInput.value.length);
+        });
+
+        const fixedList = $("#fixedList");
+        fixedList.innerHTML = state.fixedExpenses.map(x => fixedRowHTML(x)).join("");
+
+        $$("#fixedList .item").forEach(el=>{
+          const id = el.getAttribute("data-id");
+          const nameEl = el.querySelector(".fx-name");
+          const amtEl = el.querySelector(".fx-amt");
+          const delEl = el.querySelector(".fx-del");
+
+          nameEl.addEventListener("input", ()=>{
+            const it = state.fixedExpenses.find(a=>a.id===id);
+            if (!it) return;
+            it.name = nameEl.value.trim() || "รายการ";
+            autosave();
+          });
+
+          amtEl.addEventListener("input", ()=>{
+            const it = state.fixedExpenses.find(a=>a.id===id);
+            if (!it) return;
+            it.amount = toNumber(amtEl.value);
+            autosave();
+            // refresh totals without losing editing context: minimal re-render for totals only
+            // simplest MVP: full re-render
+            renderIncome();
+            // restore focus
+            const restored = document.querySelector(`[data-id="${cssEscape(id)}"] .fx-amt`);
+            if (restored){
+              restored.focus();
+              restored.setSelectionRange(restored.value.length, restored.value.length);
+            }
+          });
+
+          delEl.addEventListener("click", ()=>{
+            state.fixedExpenses = state.fixedExpenses.filter(a=>a.id!==id);
+            autosave();
+            renderIncome();
+          });
+        });
+
+        $("#addFixed").addEventListener("click", ()=>{
+          state.fixedExpenses.unshift({ id: uid(), name: "รายการใหม่", amount: 0 });
+          autosave();
+          renderIncome();
+          const first = $("#fixedList .fx-name");
+          if (first) first.focus();
+        });
+      }
+
+      function fixedRowHTML(x){
+        return `
+          <div class="item" data-id="${x.id}">
+            <div class="left" style="width:100%">
+              <label class="sr-only">ชื่อรายการ</label>
+              <input class="fx-name" value="${escapeHTMLAttr(x.name)}" placeholder="ชื่อรายการ เช่น ค่าเช่า" />
+              <small>จำนวนเงิน (บาท)</small>
+              <input class="fx-amt" inputmode="numeric" value="${x.amount ? String(x.amount) : ""}" placeholder="เช่น 8000" />
+            </div>
+            <div class="right">
+              <button class="iconBtn danger fx-del" type="button" title="ลบ">✕</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDebts(){
+        viewRoot.innerHTML = `
           <div class="card">
-            <div class="k">Rally length (last)</div>
-            <div class="v" id="rallyLen">—</div>
-            <div class="k" style="margin-top:8px;">Shot that ended rally</div>
-            <div class="v" id="endShot">—</div>
+            <div class="sectionTitle">
+              <h1>หนี้ (บัตรเครดิต/ผ่อน/สินเชื่อ)</h1>
+              <button class="btn" type="button" id="addDebt">+ เพิ่มหนี้</button>
+            </div>
+
+            <div class="hint">
+              กรอก “ยอดชำระขั้นต่ำ” เพื่อให้ Dashboard คำนวณเงินคงเหลือได้ทันที<br>
+              (ถ้าไม่แน่ใจ ให้ใส่ยอดที่ต้องจ่ายต่อเดือน)
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="list" id="debtList"></div>
           </div>
-          <div class="card">
-            <div class="k">Result (last)</div>
-            <div class="v" id="lastPoint">—</div>
-            <div class="k" style="margin-top:8px;">Reason</div>
-            <div class="v" id="reason">—</div>
+        `;
+
+        const list = $("#debtList");
+        if (state.debts.length === 0){
+          list.innerHTML = `<div class="hint">ยังไม่มีหนี้ — กด “เพิ่มหนี้” เพื่อเริ่ม</div>`;
+        } else {
+          list.innerHTML = state.debts
+            .map(d => debtCardHTML(d))
+            .join("");
+        }
+
+        // Wire events
+        $$("#debtList .debt").forEach(card=>{
+          const id = card.getAttribute("data-id");
+          const get = () => state.debts.find(x=>x.id===id);
+
+          const typeEl = card.querySelector(".d-type");
+          const nameEl = card.querySelector(".d-name");
+          const balEl  = card.querySelector(".d-balance");
+          const aprEl  = card.querySelector(".d-apr");
+          const minEl  = card.querySelector(".d-min");
+          const dueEl  = card.querySelector(".d-due");
+          const noteEl = card.querySelector(".d-note");
+          const delEl  = card.querySelector(".d-del");
+
+          const onAny = ()=>{
+            const d = get(); if (!d) return;
+            d.type = typeEl.value === "installment" ? "installment" : "credit";
+            d.name = nameEl.value.trim() || (d.type === "installment" ? "สินเชื่อ/ผ่อนสินค้า" : "บัตรเครดิต");
+            d.balance = toNumber(balEl.value);
+            d.apr = toNumber(aprEl.value);
+            d.minPayment = toNumber(minEl.value);
+            d.dueDay = clamp(Math.floor(toNumber(dueEl.value || 1)), 1, 31);
+            d.note = noteEl.value || "";
+            autosave();
+          };
+
+          [typeEl, nameEl, balEl, aprEl, minEl, dueEl, noteEl].forEach(el=>{
+            el.addEventListener("input", onAny);
+            el.addEventListener("change", onAny);
+          });
+
+          delEl.addEventListener("click", ()=>{
+            state.debts = state.debts.filter(x=>x.id!==id);
+            autosave();
+            renderDebts();
+          });
+        });
+
+        $("#addDebt").addEventListener("click", ()=>{
+          state.debts.unshift({
+            id: uid(),
+            type: "credit",
+            name: "บัตรเครดิต",
+            balance: 0,
+            apr: 16,
+            minPayment: 0,
+            dueDay: 25,
+            note: ""
+          });
+          autosave();
+          renderDebts();
+          const first = $("#debtList .d-name");
+          if (first) first.focus();
+        });
+      }
+
+      function debtCardHTML(d){
+        const st = dueStatus(d.dueDay);
+        return `
+          <div class="item debt" data-id="${d.id}" style="flex-direction:column; align-items:stretch">
+            <div style="display:flex; gap:10px; align-items:flex-start; justify-content:space-between; width:100%">
+              <div class="left" style="width:100%">
+                <div class="twoCol">
+                  <label>
+                    ประเภท
+                    <select class="d-type">
+                      <option value="credit" ${d.type==="credit"?"selected":""}>บัตรเครดิต</option>
+                      <option value="installment" ${d.type==="installment"?"selected":""}>ผ่อน/สินเชื่อ</option>
+                    </select>
+                  </label>
+                  <label>
+                    ชื่อหนี้
+                    <input class="d-name" placeholder="เช่น KBank Card / ผ่อนมือถือ" value="${escapeHTMLAttr(d.name)}" />
+                  </label>
+                </div>
+
+                <div class="twoCol">
+                  <label>
+                    ยอดคงค้าง (บาท)
+                    <input class="d-balance" inputmode="numeric" placeholder="เช่น 25000" value="${d.balance?String(d.balance):""}" />
+                  </label>
+                  <label>
+                    ยอดชำระขั้นต่ำ/ต่อเดือน (บาท)
+                    <input class="d-min" inputmode="numeric" placeholder="เช่น 1500" value="${d.minPayment?String(d.minPayment):""}" />
+                  </label>
+                </div>
+
+                <div class="twoCol">
+                  <label>
+                    ดอกเบี้ยต่อปี (APR %)
+                    <input class="d-apr" inputmode="decimal" placeholder="เช่น 16" value="${d.apr?String(d.apr):""}" />
+                  </label>
+                  <label>
+                    กำหนดชำระ (วันที่ 1-31)
+                    <input class="d-due" inputmode="numeric" placeholder="เช่น 25" value="${d.dueDay?String(d.dueDay):""}" />
+                  </label>
+                </div>
+
+                <label>
+                  โน้ต (ไม่บังคับ)
+                  <textarea class="d-note" placeholder="เช่น จ่ายก่อนวันที่ 25 ทุกเดือน">${escapeHTML(d.note||"")}</textarea>
+                </label>
+
+                <div class="legend">
+                  <span class="pill" style="border-color:${st.color}; color:${st.color}">สถานะ: ${st.label}</span>
+                </div>
+              </div>
+
+              <div class="right">
+                <button class="iconBtn danger d-del" type="button" title="ลบหนี้">✕</button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="panel log" id="log" aria-label="Match log"></div>
-    </div>
-  </main>
-</div>
-
-<script>
-(() => {
-  // ---- helpers
-  const el = (id) => document.getElementById(id);
-  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
-  const lerp = (a,b,t)=>a+(b-a)*t;
-  const smooth = (t)=>t*t*(3-2*t);
-
-  function randn() { // Box-Muller
-    let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
-    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-  }
-  function pickWeighted(items){
-    let s = 0; for (const it of items) s += it.w;
-    let r = Math.random()*s;
-    for (const it of items){ r -= it.w; if (r <= 0) return it.v; }
-    return items[items.length-1].v;
-  }
-
-  // ---- UI refs
-  const ui = {
-    aSpeed: el('aSpeed'), aSmash: el('aSmash'), aIQ: el('aIQ'),
-    bSpeed: el('bSpeed'), bSmash: el('bSmash'), bIQ: el('bIQ'),
-    aSpeedVal: el('aSpeedVal'), aSmashVal: el('aSmashVal'), aIQVal: el('aIQVal'),
-    bSpeedVal: el('bSpeedVal'), bSmashVal: el('bSmashVal'), bIQVal: el('bIQVal'),
-    play: el('play'), auto: el('auto'), reset: el('reset'),
-    scoreA: el('scoreA'), scoreB: el('scoreB'),
-    serveA: el('serveA'), serveB: el('serveB'),
-    statusLine: el('statusLine'),
-    chanceA: el('chanceA'), chanceB: el('chanceB'), chanceBar: el('chanceBar'),
-    rallyLen: el('rallyLen'), endShot: el('endShot'),
-    lastPoint: el('lastPoint'), reason: el('reason'),
-    log: el('log'),
-    cv: el('cv')
-  };
-
-  function readSkills() {
-    return {
-      A: { spd:+ui.aSpeed.value, sm:+ui.aSmash.value, iq:+ui.aIQ.value },
-      B: { spd:+ui.bSpeed.value, sm:+ui.bSmash.value, iq:+ui.bIQ.value },
-    };
-  }
-  function updateVals(){
-    ui.aSpeedVal.textContent = ui.aSpeed.value;
-    ui.aSmashVal.textContent = ui.aSmash.value;
-    ui.aIQVal.textContent = ui.aIQ.value;
-    ui.bSpeedVal.textContent = ui.bSpeed.value;
-    ui.bSmashVal.textContent = ui.bSmash.value;
-    ui.bIQVal.textContent = ui.bIQ.value;
-    updateChances();
-  }
-  ['aSpeed','aSmash','aIQ','bSpeed','bSmash','bIQ'].forEach(id=>{
-    ui[id].addEventListener('input', updateVals, {passive:true});
-  });
-
-  function addLog(html) {
-    const atBottom = (ui.log.scrollTop + ui.log.clientHeight) >= (ui.log.scrollHeight - 12);
-    ui.log.insertAdjacentHTML('beforeend', html);
-    if (atBottom) ui.log.scrollTop = ui.log.scrollHeight;
-  }
-
-  // ---- Game rules: 21, win by 2, cap 30
-  function isGameOver(a,b){
-    const max = Math.max(a,b), min = Math.min(a,b);
-    if (max >= 30) return true;
-    if (max >= 21 && (max - min) >= 2) return true;
-    return false;
-  }
-
-  // ---- Match state
-  const match = {
-    a: 0, b: 0,
-    server: 'A', // A or B
-    busy: false
-  };
-
-  function updateScoreUI(){
-    ui.scoreA.textContent = match.a;
-    ui.scoreB.textContent = match.b;
-    ui.serveA.classList.toggle('on', match.server === 'A');
-    ui.serveB.classList.toggle('on', match.server === 'B');
-  }
-
-  // ---- Skill model (more realistic flow)
-  // Shot selection depends on intelligence and context (attack/defense).
-  // Speed drives retrieval and defense.
-  // Smash drives winners but adds error risk when overused or low IQ.
-  function pointWinChance(sk){
-    // A "macro" estimate for next rally (not full sim)
-    const aAtk = 0.62*sk.A.sm + 0.38*sk.A.iq;
-    const bAtk = 0.62*sk.B.sm + 0.38*sk.B.iq;
-    const aDef = 0.58*sk.A.spd + 0.42*sk.A.iq;
-    const bDef = 0.58*sk.B.spd + 0.42*sk.B.iq;
-
-    const a = 0.55*aAtk + 0.45*aDef;
-    const b = 0.55*bAtk + 0.45*bDef;
-
-    const d = (a - b) / 17.0;
-    const pA = 1 / (1 + Math.exp(-d));
-    return clamp(pA, 0.08, 0.92);
-  }
-
-  function simulateRally(sk){
-    // Start context: server has slight initiative advantage
-    let attacker = match.server; // who is pressing at the moment
-    let defender = attacker === 'A' ? 'B' : 'A';
-
-    const get = (id)=> id==='A'? sk.A : sk.B;
-
-    // Rally length baseline from defense & intelligence
-    const defAvg = (0.60*sk.A.spd+0.40*sk.A.iq + 0.60*sk.B.spd+0.40*sk.B.iq)/2;
-    const atkAvg = (0.65*sk.A.sm + 0.65*sk.B.sm)/2;
-    const baseLen = clamp(5 + (defAvg-50)*0.10 - (atkAvg-50)*0.05 + randn()*1.8, 2, 26);
-    const exchanges = Math.max(2, Math.round(baseLen));
-
-    // Track some rally fatigue (minor)
-    let fatigueA = 0, fatigueB = 0;
-
-    // Determine ending event during exchanges
-    let endAt = exchanges;
-    let endShot = '—';
-    let reason = '—';
-    let winner = null;
-
-    // Utility: probability of defender returning a shot
-    function pReturn(attId, defId, shot){
-      const att = get(attId), def = get(defId);
-      const pace = shot === 'smash' ? lerp(0.62, 0.90, att.sm/100)
-                 : shot === 'drive' ? 0.72
-                 : shot === 'drop'  ? 0.55
-                 : shot === 'net'   ? 0.50
-                 : 0.62; // clear
-
-      const placement = lerp(0.45, 0.78, att.iq/100); // better placement harder to return
-      const defense = lerp(0.50, 0.88, (0.70*def.spd + 0.30*def.iq)/100);
-
-      // fatigue reduces defense slightly
-      const fat = defId==='A'? fatigueA : fatigueB;
-      const defEff = defense * (1 - 0.18*fat);
-
-      // return probability
-      const p = clamp(defEff - 0.45*pace - 0.22*placement + 0.55, 0.05, 0.97);
-      return p;
-    }
-
-    function pUnforced(attId, shot){
-      const att = get(attId);
-      const iq = att.iq/100;
-      // smash has higher unforced risk if low IQ or very high smash
-      const smashOver = clamp((att.sm - 75)/25, 0, 1);
-      const base = shot === 'smash' ? (0.06 + 0.10*smashOver) : 0.03;
-      const poorIQ = clamp((0.55 - iq), 0, 0.55);
-      return clamp(base + 0.10*poorIQ, 0.01, 0.22);
-    }
-
-    function chooseShot(attId, defId){
-      const att = get(attId);
-      const def = get(defId);
-      const iq = att.iq/100;
-      const smash = att.sm/100;
-      const defSpd = def.spd/100;
-
-      // If attacker is strong & defender slower -> more smash/drive.
-      const mismatch = clamp((smash - defSpd)*0.9, -0.5, 0.5);
-
-      // IQ increases variety & good choice (less random smash spam).
-      const smashW = lerp(0.18, 0.34, smash) + mismatch*0.12 - (1-iq)*0.10;
-      const driveW = 0.22 + mismatch*0.05;
-      const dropW  = 0.20 + (iq*0.10) - mismatch*0.03;
-      const netW   = 0.16 + (iq*0.12) - mismatch*0.02;
-      const clearW = 0.22 + (1-iq)*0.06;
-
-      const weights = [
-        {v:'smash', w: clamp(smashW, 0.08, 0.46)},
-        {v:'drive', w: clamp(driveW, 0.10, 0.34)},
-        {v:'drop',  w: clamp(dropW,  0.10, 0.34)},
-        {v:'net',   w: clamp(netW,   0.08, 0.32)},
-        {v:'clear', w: clamp(clearW, 0.10, 0.40)},
-      ];
-      return pickWeighted(weights);
-    }
-
-    for (let i=1;i<=exchanges;i++){
-      const shot = chooseShot(attacker, defender);
-
-      // unforced error by attacker
-      if (Math.random() < pUnforced(attacker, shot)){
-        endAt = i;
-        endShot = shot;
-        reason = 'Unforced error';
-        winner = defender;
-        break;
+        `;
       }
 
-      // defender returns?
-      if (Math.random() > pReturn(attacker, defender, shot)){
-        // winner by attacker (winner / forced error)
-        endAt = i;
-        endShot = shot;
-        // if smash or drive -> winner, else forced error
-        if (shot === 'smash' || shot === 'drive') reason = 'Winner';
-        else reason = 'Forced error';
-        winner = attacker;
-        break;
-      }
+      function renderPlan(){
+        const t = totals();
+        const extra = Math.max(0, t.left); // only positive leftover for payoff
+        const debts = [...state.debts].map(d=>({
+          ...d,
+          // rough monthly interest estimate
+          estInterest: toNumber(d.balance) * (toNumber(d.apr)/100) / 12
+        }));
 
-      // rally continues; small fatigue
-      if (attacker === 'A') fatigueA = clamp(fatigueA + 0.018, 0, 1);
-      else fatigueB = clamp(fatigueB + 0.018, 0, 1);
+        // Strategy: avalanche (highest APR first) by default
+        debts.sort((a,b)=>toNumber(b.apr)-toNumber(a.apr));
 
-      // Sometimes attack switches (defender turns tables), more likely with high IQ/speed
-      const def = get(defender);
-      const flip = clamp(0.10 + 0.18*(def.iq/100) + 0.12*(def.spd/100), 0.08, 0.42);
-      if (Math.random() < flip){
-        const tmp = attacker; attacker = defender; defender = tmp;
-      } else {
-        // mostly alternate roles
-        const tmp = attacker; attacker = defender; defender = tmp;
-      }
-    }
+        const payoff = debts.map(d=>{
+          const min = toNumber(d.minPayment);
+          const add = extra > 0 ? extra : 0; // naive: all leftover to first debt
+          return {
+            ...d,
+            suggestedPayment: d === debts[0] ? (min + add) : min
+          };
+        });
 
-    // If no break happened, decide by slight skill edge
-    if (!winner){
-      const pA = pointWinChance(sk);
-      winner = (Math.random() < pA) ? 'A' : 'B';
-      endShot = 'drive';
-      reason = 'Forced error';
-      endAt = exchanges;
-    }
+        viewRoot.innerHTML = `
+          <div class="grid two">
+            <section class="card">
+              <div class="sectionTitle">
+                <h1>Plan (แบบง่าย)</h1>
+                <span class="pill">Avalanche: ดอกสูงก่อน</span>
+              </div>
 
-    // Server changes only if server won rally (rally point system: winner gets point; winner serves next)
-    return {
-      winner,
-      exchanges: endAt,
-      endShot,
-      reason
-    };
-  }
+              <div class="hint">
+                นี่เป็น “แผนเบื้องต้น” เพื่อช่วยตัดสินใจ ไม่ใช่คำแนะนำการเงินแบบมืออาชีพ<br>
+                หลักการ: จ่ายขั้นต่ำทุกก้อน แล้วเอาเงินคงเหลือไปโปะหนี้ดอกสูงสุดก่อน
+              </div>
 
-  function updateChances(){
-    const sk = readSkills();
-    const pA = pointWinChance(sk);
-    const a = Math.round(pA*100);
-    ui.chanceA.textContent = a;
-    ui.chanceB.textContent = 100-a;
-    ui.chanceBar.style.width = `${clamp(a, 5, 95)}%`;
-  }
+              <div class="divider"></div>
 
-  // ---- Canvas rendering (court + players + shuttle)
-  const ctx = ui.cv.getContext('2d', {alpha:false});
+              <div class="row">
+                <div class="label">เงินคงเหลือ (ใช้โปะหนี้ได้)</div>
+                <div class="amt">${formatTHB(extra)}</div>
+              </div>
+              <div class="row">
+                <div class="label">ถ้าเงินคงเหลือติดลบ</div>
+                <div class="amt">ให้ลดรายจ่าย/เพิ่มรายรับก่อน</div>
+              </div>
 
-  function resizeCanvas(){
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const r = ui.cv.getBoundingClientRect();
-    ui.cv.width = Math.floor(r.width*dpr);
-    ui.cv.height = Math.floor(r.height*dpr);
-  }
-  window.addEventListener('resize', () => { resizeCanvas(); renderStatic(); }, {passive:true});
-  resizeCanvas();
+              <div class="divider"></div>
+              <div class="hint">
+                ถ้าหนี้เป็นบัตรเครดิต และจ่ายแค่ขั้นต่ำ ดอกเบี้ยจะสะสมเร็วมาก — การโปะเพิ่มแม้เล็กน้อยช่วยได้เยอะ
+              </div>
+            </section>
 
-  const scene = {
-    court: null,
-    A: {x:0.55,y:0.84},
-    B: {x:0.45,y:0.16},
-    shuttle: {x:0.50,y:0.50,z:0.0},
-  };
+            <section class="card">
+              <div class="sectionTitle">
+                <h1>Suggested payments</h1>
+                <span class="pill">ต่อเดือน</span>
+              </div>
+              <div class="list" id="payList"></div>
+              <div class="hint" id="payHint"></div>
+            </section>
+          </div>
+        `;
 
-  function courtRect(){
-    const w=ui.cv.width, h=ui.cv.height;
-    const mx=w*0.10, my=h*0.10;
-    const cw=w-2*mx, ch=h-2*my;
-    const topInset=cw*0.10;
-    return {w,h,mx,my,cw,ch,topInset,
-      x0: mx+topInset, y0: my,
-      x1: mx+cw-topInset, y1: my,
-      x2: mx+cw, y2: my+ch,
-      x3: mx, y3: my+ch
-    };
-  }
-  function lerp2(a,b,t){ return {x:lerp(a.x,b.x,t), y:lerp(a.y,b.y,t)}; }
-  function mapCourt(nx,ny){
-    const c=scene.court;
-    const topL={x:c.x0,y:c.y0}, topR={x:c.x1,y:c.y1};
-    const botR={x:c.x2,y:c.y2}, botL={x:c.x3,y:c.y3};
-    const left=lerp2(topL,botL,ny);
-    const right=lerp2(topR,botR,ny);
-    return lerp2(left,right,nx);
-  }
-
-  function drawCourt(){
-    scene.court = courtRect();
-    const c=scene.court;
-    const w=c.w, h=c.h;
-
-    // hall background
-    const bg = ctx.createLinearGradient(0,0,0,h);
-    bg.addColorStop(0,'rgb(11,15,17)');
-    bg.addColorStop(1,'rgb(7,10,12)');
-    ctx.fillStyle=bg;
-    ctx.fillRect(0,0,w,h);
-
-    // court polygon
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(c.x0,c.y0); ctx.lineTo(c.x1,c.y1); ctx.lineTo(c.x2,c.y2); ctx.lineTo(c.x3,c.y3);
-    ctx.closePath();
-
-    const cg = ctx.createLinearGradient(0,c.y0,0,c.y2);
-    cg.addColorStop(0,'rgba(34, 150, 92, .26)');
-    cg.addColorStop(1,'rgba(18, 105, 70, .20)');
-    ctx.fillStyle=cg;
-    ctx.fill();
-
-    // subtle floor shine
-    const shine = ctx.createRadialGradient(w*0.5,h*0.58, 10, w*0.5,h*0.58, w*0.65);
-    shine.addColorStop(0,'rgba(255,255,255,.06)');
-    shine.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=shine;
-    ctx.fill();
-
-    // court texture
-    ctx.globalAlpha=0.20;
-    ctx.strokeStyle='rgba(255,255,255,.12)';
-    ctx.lineWidth=Math.max(1,w*0.0012);
-    for(let i=0;i<18;i++){
-      const t=i/17;
-      const a=mapCourt(0.05,t), b=mapCourt(0.95,t);
-      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-    }
-    ctx.globalAlpha=1;
-
-    // lines
-    ctx.strokeStyle='rgba(235,245,255,.72)';
-    ctx.lineWidth=Math.max(1.2,w*0.0018);
-    ctx.lineJoin='round';
-
-    // boundary
-    ctx.beginPath();
-    ctx.moveTo(c.x0,c.y0); ctx.lineTo(c.x1,c.y1); ctx.lineTo(c.x2,c.y2); ctx.lineTo(c.x3,c.y3); ctx.closePath();
-    ctx.stroke();
-
-    // center line
-    ctx.globalAlpha=0.70;
-    const midT=mapCourt(0.5,0), midB=mapCourt(0.5,1);
-    ctx.beginPath(); ctx.moveTo(midT.x,midT.y); ctx.lineTo(midB.x,midB.y); ctx.stroke();
-
-    // net
-    ctx.globalAlpha=0.95;
-    const netY=0.5, netL=mapCourt(0,netY), netR=mapCourt(1,netY);
-    ctx.strokeStyle='rgba(255,255,255,.55)';
-    ctx.lineWidth=Math.max(1.3,w*0.0024);
-    ctx.beginPath(); ctx.moveTo(netL.x,netL.y); ctx.lineTo(netR.x,netR.y); ctx.stroke();
-
-    // net mesh hint
-    ctx.globalAlpha=0.18;
-    ctx.lineWidth=Math.max(1,w*0.0010);
-    for(let i=0;i<14;i++){
-      const t=i/13;
-      const a=lerp2(netL, netR, t);
-      ctx.beginPath(); ctx.moveTo(a.x,a.y-10); ctx.lineTo(a.x,a.y+10); ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  function drawPlayer(nx,ny,label,active=false){
-    const p=mapCourt(nx,ny);
-    const r=Math.max(7, scene.court.w*0.008);
-    ctx.save();
-    // shadow
-    ctx.globalAlpha=0.22;
-    ctx.fillStyle='black';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y + r*0.95, r*0.95, r*0.36, 0, 0, Math.PI*2); ctx.fill();
-
-    // body
-    ctx.globalAlpha=1;
-    ctx.fillStyle= active ? 'rgba(140,210,255,.92)' : 'rgba(235,245,255,.86)';
-    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
-
-    // label
-    ctx.fillStyle='rgba(0,0,0,.65)';
-    ctx.font=`${Math.max(10, scene.court.w*0.012)}px ui-sans-serif, system-ui`;
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(label,p.x,p.y+0.5);
-    ctx.restore();
-  }
-
-  function drawShuttle(nx,ny,z,smash=false){
-    const p=mapCourt(nx,ny);
-    const r=Math.max(4, scene.court.w*0.0048) * (1 + z*0.10);
-
-    ctx.save();
-    if (smash){
-      ctx.globalAlpha=0.22;
-      ctx.fillStyle='rgba(255,255,255,.95)';
-      ctx.beginPath(); ctx.arc(p.x,p.y,r*3.5,0,Math.PI*2); ctx.fill();
-    }
-    // shuttle head
-    ctx.globalAlpha=0.95;
-    ctx.fillStyle='rgba(255,255,255,.92)';
-    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
-    // feathers (simple)
-    ctx.globalAlpha=0.45;
-    ctx.strokeStyle='rgba(255,255,255,.65)';
-    ctx.lineWidth=Math.max(1, scene.court.w*0.0012);
-    ctx.beginPath();
-    ctx.moveTo(p.x-r*1.2, p.y-r*0.6);
-    ctx.lineTo(p.x+r*1.4, p.y+r*0.5);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function renderStatic(){
-    drawCourt();
-    drawPlayer(scene.A.x, scene.A.y, 'A', false);
-    drawPlayer(scene.B.x, scene.B.y, 'B', false);
-    drawShuttle(scene.shuttle.x, scene.shuttle.y, scene.shuttle.z, false);
-  }
-
-  // ---- Rally animation driven by shot list
-  function planRallyAnimation(sk, outcome){
-    const ex = clamp(outcome.exchanges, 2, 26);
-    const smashBiasA = sk.A.sm/100;
-    const smashBiasB = sk.B.sm/100;
-    const speedAvg = (sk.A.spd + sk.B.spd)/2;
-
-    // segment duration: faster players => faster pace
-    const segBase = lerp(0.42, 0.22, clamp(speedAvg/100,0,1));
-
-    function targetFor(topHitter, shot){
-      // topHitter true => B hits to bottom half (A)
-      // distribute targets by shot type
-      let yMin,yMax,xMin=0.18,xMax=0.82;
-      if (topHitter){
-        // towards bottom
-        if (shot==='net' || shot==='drop') { yMin=0.52; yMax=0.70; }
-        else if (shot==='smash' || shot==='drive') { yMin=0.62; yMax=0.92; }
-        else { yMin=0.58; yMax=0.88; } // clear
-      } else {
-        // towards top
-        if (shot==='net' || shot==='drop') { yMin=0.30; yMax=0.48; }
-        else if (shot==='smash' || shot==='drive') { yMin=0.08; yMax=0.38; }
-        else { yMin=0.12; yMax=0.42; }
-      }
-      // sidelines a bit more often on smashes/drives
-      const side = (shot==='smash'||shot==='drive') ? 0.12 : 0.06;
-      xMin = 0.18 - side; xMax = 0.82 + side;
-      return { x: clamp(lerp(xMin,xMax,Math.random()), 0.06, 0.94),
-               y: clamp(lerp(yMin,yMax,Math.random()), 0.06, 0.94) };
-    }
-
-    // build shot plan (we don't need exact sim shot list; approximate visually)
-    let cur = {x:0.50,y:0.50};
-    let topHitter = (match.server === 'B'); // if B serves, first hitter top
-    let plan = [];
-    for (let i=0;i<ex;i++){
-      const hitter = topHitter ? 'B' : 'A';
-      const smashP = hitter==='A' ? lerp(0.10, 0.40, smashBiasA) : lerp(0.10, 0.40, smashBiasB);
-      const shot = pickWeighted([
-        {v:'smash', w: smashP},
-        {v:'drive', w: 0.22},
-        {v:'drop',  w: 0.18},
-        {v:'net',   w: 0.14},
-        {v:'clear', w: 0.22}
-      ]);
-      const to = targetFor(topHitter, shot);
-      const dur = segBase * (shot==='smash' ? 0.70 : shot==='drive' ? 0.82 : shot==='net' ? 1.10 : 1.0);
-      plan.push({from:{...cur}, to, dur, shot, hitter});
-      cur = to;
-      topHitter = !topHitter;
-    }
-
-    // final is decisive shot type from outcome
-    if (plan.length){
-      plan[plan.length-1].shot = outcome.endShot;
-    }
-    return plan;
-  }
-
-  async function animate(plan, outcome){
-    match.busy = true;
-    let idx = 0;
-    let segT = 0;
-    let lastTime = performance.now();
-
-    function tick(now){
-      const dt = (now - lastTime) * 0.001;
-      lastTime = now;
-
-      const seg = plan[idx];
-      if (!seg){
-        match.busy = false;
-        renderStatic();
-        return;
-      }
-
-      segT += dt;
-      const t = clamp(segT / seg.dur, 0, 1);
-      const e = smooth(t);
-
-      scene.shuttle.x = lerp(seg.from.x, seg.to.x, e);
-      scene.shuttle.y = lerp(seg.from.y, seg.to.y, e);
-      // arc height by shot
-      const arc = Math.sin(Math.PI*e);
-      const arcMul = (seg.shot==='clear')? 1.35 : (seg.shot==='drop')? 0.85 : (seg.shot==='net')? 0.55 : (seg.shot==='smash')? 0.75 : 0.95;
-      scene.shuttle.z = arc * 1.2 * arcMul;
-
-      drawCourt();
-      drawPlayer(scene.A.x, scene.A.y, 'A', seg.hitter==='A');
-      drawPlayer(scene.B.x, scene.B.y, 'B', seg.hitter==='B');
-      drawShuttle(scene.shuttle.x, scene.shuttle.y, scene.shuttle.z, seg.shot==='smash');
-
-      if (t >= 1){
-        idx++;
-        segT = 0;
-        if (idx >= plan.length){
-          match.busy = false;
-          // settle
-          scene.shuttle.x = 0.50; scene.shuttle.y = 0.50; scene.shuttle.z = 0;
-          renderStatic();
+        const payList = $("#payList");
+        if (payoff.length === 0){
+          $("#payHint").textContent = "ยังไม่มีหนี้ — ไปเพิ่มในแท็บ Debts";
+          payList.innerHTML = "";
           return;
         }
+
+        payList.innerHTML = payoff.map((d, idx)=>{
+          const badge = idx===0 && extra>0 ? `<span class="pill" style="border-color: rgba(61,220,151,.45); color: var(--good)">โปะเพิ่ม</span>` : "";
+          return `
+            <div class="item">
+              <div class="left">
+                <b>${escapeHTML(d.name)}</b>
+                <small>APR ${toNumber(d.apr).toFixed(1)}% • ดอกโดยประมาณ/เดือน ${formatTHB(d.estInterest)}</small>
+              </div>
+              <div class="right" style="flex-direction:column; align-items:flex-end">
+                <div style="font-weight:900">${formatTHB(d.suggestedPayment)}</div>
+                ${badge}
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        $("#payHint").textContent = extra>0
+          ? "ระบบเอาเงินคงเหลือทั้งหมดไปโปะหนี้ดอกสูงสุด (ปรับเองได้โดยแก้ “ยอดชำระขั้นต่ำ/ต่อเดือน”)"
+          : "เงินคงเหลือไม่พอสำหรับโปะเพิ่ม — โฟกัสทำให้เงินคงเหลือเป็นบวกก่อน";
       }
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
 
-  // ---- Play one rally with rules + serve + game over
-  function playOne(){
-    if (match.busy) return;
-    if (isGameOver(match.a, match.b)) return;
+      // ---------- Simple Charts (Canvas) ----------
+      function drawMoneyPieChart(canvas, legendEl){
+        const ctx = canvas.getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
 
-    const sk = readSkills();
-    const outcome = simulateRally(sk);
+        // Resize for crispness
+        const cssW = canvas.clientWidth;
+        const cssH = canvas.clientHeight;
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
 
-    // update widgets
-    ui.rallyLen.textContent = `${outcome.exchanges} exchanges`;
-    ui.endShot.textContent = outcome.endShot;
-    ui.reason.textContent = outcome.reason;
+        const t = totals();
+        const income = Math.max(0, t.income);
+        const fixed = Math.max(0, t.fixedTotal);
+        const debtPay = Math.max(0, t.debtMinTotal);
+        const left = Math.max(0, income - fixed - debtPay);
 
-    // scoring
-    const winner = outcome.winner;
-    if (winner === 'A') match.a++; else match.b++;
+        // Avoid divide by zero: if no income, show empty chart
+        const total = fixed + debtPay + left;
+        const data = [
+          { label: "รายจ่ายคงที่", value: fixed, color: "rgba(255,255,255,.32)" },
+          { label: "ชำระหนี้ขั้นต่ำ", value: debtPay, color: "rgba(255,209,102,.70)" },
+          { label: "เงินคงเหลือ", value: left, color: "rgba(61,220,151,.70)" },
+        ];
 
-    // serve: winner serves next
-    match.server = winner;
+        // Clear
+        ctx.clearRect(0,0,cssW,cssH);
 
-    // status line + log
-    ui.lastPoint.textContent = `${winner} won`;
-    ui.statusLine.textContent = isGameOver(match.a, match.b)
-      ? `Game over • ${match.a > match.b ? 'A' : 'B'} wins`
-      : `${winner} won rally • ${winner} to serve`;
+        // Background ring
+        const cx = cssW/2, cy = cssH/2;
+        const r = Math.min(cssW, cssH)*0.36;
+        const rInner = r*0.62;
 
-    const pillClass = (outcome.reason==='Winner') ? 'good' : (outcome.reason==='Unforced error') ? 'bad' : '';
-    addLog(
-      `<div>
-        <span class="pill">Rally</span>
-        <b>${winner}</b> won •
-        <span class="muted">${outcome.exchanges} exchanges</span> •
-        <span class="muted">end: ${outcome.endShot}</span> •
-        <span class="pill ${pillClass}">${outcome.reason}</span>
-      </div>`
-    );
+        // Base
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.arc(cx, cy, rInner, 0, Math.PI*2, true);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(255,255,255,.06)";
+        ctx.fill();
 
-    updateScoreUI();
-    updateChances();
+        if (total <= 0){
+          // Text
+          ctx.fillStyle = "rgba(169,183,214,.8)";
+          ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("ยังไม่มีข้อมูลรายรับ/รายจ่าย", cx, cy);
+          legendEl.innerHTML = "";
+          return;
+        }
 
-    // animate
-    const plan = planRallyAnimation(sk, outcome);
-    animate(plan, outcome);
-  }
+        let start = -Math.PI/2;
+        data.forEach(seg=>{
+          const frac = seg.value/total;
+          const end = start + frac * Math.PI*2;
 
-  async function auto(n=10){
-    if (match.busy) return;
-    for (let i=0;i<n;i++){
-      if (isGameOver(match.a, match.b)) break;
-      playOne();
-      await waitUntil(() => !match.busy, 7000);
-      await sleep(120);
-    }
-  }
+          ctx.beginPath();
+          ctx.moveTo(cx,cy);
+          ctx.arc(cx, cy, r, start, end);
+          ctx.closePath();
+          ctx.fillStyle = seg.color;
+          ctx.fill();
 
-  function reset(){
-    match.a = 0; match.b = 0;
-    match.server = 'A';
-    match.busy = false;
+          start = end;
+        });
 
-    ui.statusLine.textContent = 'Ready';
-    ui.rallyLen.textContent = '—';
-    ui.endShot.textContent = '—';
-    ui.lastPoint.textContent = '—';
-    ui.reason.textContent = '—';
+        // Hole
+        ctx.beginPath();
+        ctx.arc(cx, cy, rInner, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(11,18,32,1)";
+        ctx.fill();
 
-    ui.log.innerHTML = `<div class="muted">Set skills, then press <b>Play rally</b>. Rules: 21 points, win by 2, cap 30.</div>`;
-    updateScoreUI();
-    updateChances();
+        // Center text
+        ctx.fillStyle = "rgba(232,238,252,.95)";
+        ctx.font = "900 16px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("รวมใช้จ่าย", cx, cy - 6);
+        ctx.fillStyle = "rgba(169,183,214,.9)";
+        ctx.font = "800 14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.fillText(formatTHB(fixed + debtPay), cx, cy + 16);
 
-    scene.A.x = 0.55; scene.A.y = 0.84;
-    scene.B.x = 0.45; scene.B.y = 0.16;
-    scene.shuttle.x = 0.50; scene.shuttle.y = 0.50; scene.shuttle.z = 0;
-    renderStatic();
-  }
+        // Legend
+        legendEl.innerHTML = data.map(seg=>{
+          return `<span><span class="dot" style="background:${seg.color}"></span>${seg.label}: ${formatTHB(seg.value)}</span>`;
+        }).join("");
+      }
 
-  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-  function waitUntil(pred, timeoutMs){
-    const start = performance.now();
-    return new Promise((resolve)=>{
-      (function loop(){
-        if (pred()) return resolve(true);
-        if (performance.now() - start > timeoutMs) return resolve(false);
-        requestAnimationFrame(loop);
-      })();
-    });
-  }
+      function drawDebtBarChart(canvas, hintEl){
+        const ctx = canvas.getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
 
-  ui.play.addEventListener('click', playOne);
-  ui.auto.addEventListener('click', () => auto(10));
-  ui.reset.addEventListener('click', reset);
+        const cssW = canvas.clientWidth;
+        const cssH = canvas.clientHeight;
+        canvas.width = Math.floor(cssW * dpr);
+        canvas.height = Math.floor(cssH * dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  // init
-  updateVals();
-  reset();
-})();
-</script>
+        ctx.clearRect(0,0,cssW,cssH);
+
+        const debts = [...state.debts].sort((a,b)=>toNumber(b.balance)-toNumber(a.balance)).slice(0,8);
+        if (debts.length === 0){
+          ctx.fillStyle = "rgba(169,183,214,.8)";
+          ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("ยังไม่มีหนี้", cssW/2, cssH/2);
+          hintEl.textContent = "เพิ่มหนี้ในแท็บ Debts เพื่อดูกราฟ";
+          return;
+        }
+        hintEl.textContent = debts.length < state.debts.length ? "แสดง 8 รายการยอดหนี้สูงสุด" : "";
+
+        const padding = 18;
+        const chartTop = 10;
+        const chartBottom = cssH - 24;
+        const chartH = chartBottom - chartTop;
+        const chartW = cssW - padding*2;
+
+        const maxVal = Math.max(...debts.map(d=>toNumber(d.balance)), 1);
+        const barGap = 10;
+        const barW = Math.max(18, Math.floor((chartW - barGap*(debts.length-1)) / debts.length));
+
+        // Axis baseline
+        ctx.strokeStyle = "rgba(255,255,255,.14)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, chartBottom);
+        ctx.lineTo(padding + chartW, chartBottom);
+        ctx.stroke();
+
+        // Bars
+        debts.forEach((d,i)=>{
+          const v = toNumber(d.balance);
+          const h = (v / maxVal) * (chartH - 18);
+          const x = padding + i*(barW+barGap);
+          const y = chartBottom - h;
+
+          // color by type
+          const fill = d.type === "credit" ? "rgba(122,162,255,.72)" : "rgba(255,209,102,.72)";
+
+          // bar
+          roundRect(ctx, x, y, barW, h, 10);
+          ctx.fillStyle = fill;
+          ctx.fill();
+
+          // label (truncate)
+          const name = (d.name || "").trim();
+          const short = name.length > 10 ? name.slice(0,10) + "…" : name;
+
+          ctx.fillStyle = "rgba(169,183,214,.95)";
+          ctx.font = "700 11px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(short || "หนี้", x + barW/2, cssH - 8);
+
+          // value on top
+          ctx.fillStyle = "rgba(232,238,252,.95)";
+          ctx.font = "800 11px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+          ctx.fillText(Math.round(v).toLocaleString("th-TH"), x + barW/2, Math.max(12, y - 6));
+        });
+      }
+
+      function roundRect(ctx, x, y, w, h, r){
+        const rr = Math.min(r, w/2, h/2);
+        ctx.beginPath();
+        ctx.moveTo(x+rr, y);
+        ctx.arcTo(x+w, y, x+w, y+h, rr);
+        ctx.arcTo(x+w, y+h, x, y+h, rr);
+        ctx.arcTo(x, y+h, x, y, rr);
+        ctx.arcTo(x, y, x+w, y, rr);
+        ctx.closePath();
+      }
+
+      // ---------- Routing (Tabs) ----------
+      let currentTab = "dashboard";
+
+      function setTab(tab){
+        currentTab = tab;
+        $$(".tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===tab));
+        if (tab==="dashboard") renderDashboard();
+        else if (tab==="income") renderIncome();
+        else if (tab==="debts") renderDebts();
+        else renderPlan();
+        // After render, update charts on resize
+        requestAnimationFrame(()=>refreshChartsIfNeeded());
+      }
+
+      function refreshChartsIfNeeded(){
+        if (currentTab !== "dashboard") return;
+        const pie = $("#pieChart");
+        const bar = $("#barChart");
+        if (pie) drawMoneyPieChart(pie, $("#pieLegend"));
+        if (bar) drawDebtBarChart(bar, $("#barHint"));
+      }
+
+      // ---------- Autosave ----------
+      let saveTimer = null;
+      function autosave(){
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(()=>{
+          store.save(state);
+          setLastSaved();
+        }, 120);
+      }
+
+      // ---------- Escape helpers ----------
+      function escapeHTML(s){
+        return String(s)
+          .replaceAll("&","&amp;")
+          .replaceAll("<","&lt;")
+          .replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;")
+          .replaceAll("'","&#39;");
+      }
+      function escapeHTMLAttr(s){ return escapeHTML(s).replaceAll("\n"," "); }
+      function cssEscape(s){
+        // minimal escape for attribute query usage
+        return String(s).replaceAll('"','\\"');
+      }
+
+      // ---------- Init ----------
+      setMonthLabel();
+      setLastSaved();
+
+      $$(".tab").forEach(el=>{
+        el.addEventListener("click", ()=>setTab(el.dataset.tab));
+      });
+
+      $("#resetBtn").addEventListener("click", ()=>{
+        const ok = confirm("ล้างข้อมูลทั้งหมดในเครื่องนี้? (ย้อนกลับไม่ได้)");
+        if (!ok) return;
+        store.reset();
+        state = store.load();
+        setMonthLabel();
+        setLastSaved();
+        setTab("dashboard");
+        showToast("ล้างข้อมูลแล้ว");
+      });
+
+      // redraw charts on resize
+      window.addEventListener("resize", ()=>{
+        refreshChartsIfNeeded();
+      });
+
+      // initial render
+      setTab("dashboard");
+    })();
+  </script>
 </body>
 </html>
