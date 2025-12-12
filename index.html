@@ -1,1255 +1,1089 @@
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>เงินเข้า-ออก & หนี้ (Thai Finance & Debt Tracker)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Can I Afford This? | ซื้อไหวไหม</title>
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#111b2e;
-      --card2:#0f1930;
-      --text:#e8eefc;
-      --muted:#a9b7d6;
-      --line:rgba(255,255,255,.10);
-      --good:#3ddc97;
-      --warn:#ffd166;
-      --bad:#ff5c7a;
-      --accent:#7aa2ff;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius:16px;
-      --pad:14px;
-      --max: 980px;
-      --tap: 46px;
-      color-scheme: dark;
+      --bg:#0b0f14;
+      --panel:#111826;
+      --panel2:#0f1622;
+      --text:#e8eef7;
+      --muted:#a8b3c7;
+      --line:#223049;
+      --good:#1ee37a;
+      --ok:#ffd166;
+      --bad:#ff4d6d;
+      --no:#ff2d55;
+      --chip:#162338;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 16px;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% -10%, rgba(122,162,255,.22), transparent 55%),
-                  radial-gradient(900px 500px at 100% 10%, rgba(61,220,151,.16), transparent 55%),
-                  var(--bg);
+      background: radial-gradient(1200px 800px at 20% 10%, #13213a 0%, var(--bg) 55%) fixed;
       color:var(--text);
-    }
-    .app{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: env(safe-area-inset-top) 14px calc(14px + env(safe-area-inset-bottom)) 14px;
+      font: 15px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     header{
-      position: sticky;
-      top:0;
-      z-index:10;
-      backdrop-filter: blur(10px);
-      background: rgba(11,18,32,.70);
-      border-bottom: 1px solid var(--line);
-      margin: 0 -14px 12px -14px;
-      padding: 12px 14px;
+      padding:18px 16px 10px;
+      max-width:1100px; margin:0 auto;
+      display:flex; gap:12px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap;
     }
-    .topbar{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
+    h1{margin:0; font-size:18px; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:12.5px}
+    .topActions{display:flex; gap:8px; flex-wrap:wrap}
+    button{
+      appearance:none; border:1px solid var(--line); background:linear-gradient(180deg, #162338, #101a2a);
+      color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
     }
-    .brand{
-      display:flex; flex-direction:column; gap:2px;
+    button:active{transform:translateY(1px)}
+    button.secondary{background:transparent}
+    main{
+      max-width:1100px; margin:0 auto; padding:10px 16px 28px;
+      display:grid; gap:14px;
+      grid-template-columns: 1.1fr .9fr;
     }
-    .brand b{font-size:16px; letter-spacing:.2px}
-    .brand small{color:var(--muted)}
-    .actions{display:flex; gap:8px; align-items:center}
-    button, .btn{
-      height: var(--tap);
-      padding: 0 14px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      font-weight: 600;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    button:active{transform: translateY(1px)}
-    .btn-primary{
-      background: linear-gradient(180deg, rgba(122,162,255,.95), rgba(122,162,255,.65));
-      border-color: rgba(122,162,255,.55);
-      color:#07102a;
-    }
-    .btn-danger{
-      background: rgba(255,92,122,.12);
-      border-color: rgba(255,92,122,.35);
-      color: var(--text);
-    }
-    .pill{
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .grid{
-      display:grid;
-      gap:12px;
-    }
-    @media(min-width:860px){
-      .grid.two{grid-template-columns: 1.2fr .8fr}
-      .grid.cards{grid-template-columns: repeat(3,1fr)}
-      .grid.charts{grid-template-columns: 1fr 1fr}
+    @media (max-width: 980px){
+      main{grid-template-columns:1fr}
     }
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(34,48,73,.7);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: var(--pad);
       overflow:hidden;
     }
-    .card h2{
-      margin:0 0 10px 0;
-      font-size: 14px;
-      color: var(--muted);
-      font-weight: 700;
-      letter-spacing:.2px;
-      text-transform:none;
+    .cardHead{
+      padding:14px 14px 10px;
+      display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      border-bottom:1px solid rgba(34,48,73,.55);
+      background: linear-gradient(180deg, rgba(22,35,56,.65), rgba(17,24,38,.15));
     }
-    .hero{
-      display:flex;
-      gap:12px;
-      align-items: baseline;
-      justify-content:space-between;
-      flex-wrap: wrap;
+    .cardHead h2{margin:0; font-size:14px}
+    .hint{color:var(--muted); font-size:12px}
+    .cardBody{padding:14px}
+    .grid2{display:grid; gap:10px; grid-template-columns:1fr 1fr}
+    @media (max-width: 520px){ .grid2{grid-template-columns:1fr} }
+    label{display:block; font-size:12px; color:var(--muted); margin:0 0 6px}
+    .field{
+      background: rgba(15,22,34,.85);
+      border:1px solid rgba(34,48,73,.85);
+      border-radius:14px;
+      padding:10px 10px;
+      display:flex; gap:10px; align-items:center;
     }
-    .hero .value{
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      line-height:1.05;
+    .field input, .field select{
+      width:100%;
+      background: transparent;
+      border:0; outline:none;
+      color:var(--text);
+      font-size:14px;
     }
-    .hero .sub{
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 2px;
+    .prefix{
+      color:var(--muted);
+      font-size:12px;
+      padding:6px 8px;
+      background: rgba(22,35,56,.75);
+      border:1px solid rgba(34,48,73,.6);
+      border-radius: 999px;
+      white-space:nowrap;
     }
-    .hero .delta{
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .value.good{color: var(--good)}
-    .value.bad{color: var(--bad)}
-    .value.warn{color: var(--warn)}
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      padding:10px 0;
-      border-top:1px dashed rgba(255,255,255,.10);
-    }
-    .row:first-of-type{border-top:none}
-    .row .label{
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .row .amt{
-      font-weight: 800;
-    }
-
-    .tabs{
-      position: sticky;
-      bottom: 0;
-      z-index: 20;
-      margin: 14px -14px 0 -14px;
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) 12px;
-      border-top: 1px solid var(--line);
-      backdrop-filter: blur(10px);
-      background: rgba(11,18,32,.75);
-    }
-    .tabbar{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:8px;
-    }
+    .row{display:grid; gap:10px}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
     .tab{
-      height: 48px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      border:1px solid rgba(34,48,73,.7);
+      background: rgba(22,35,56,.35);
+      padding:9px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      user-select:none;
+      font-size:12.5px;
+      color:var(--muted);
+    }
+    .tab.active{color:var(--text); background: rgba(22,35,56,.8)}
+    .chips{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      background: rgba(22,35,56,.7);
+      border:1px solid rgba(34,48,73,.6);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      color:var(--muted);
       cursor:pointer;
       user-select:none;
     }
-    .tab.active{
-      background: rgba(122,162,255,.18);
-      border-color: rgba(122,162,255,.35);
-      color: var(--text);
+    .chip.active{color:var(--text); border-color: rgba(255,255,255,.18)}
+    .resultTop{
+      display:flex; align-items:stretch; justify-content:space-between; gap:10px; flex-wrap:wrap;
     }
-
-    .sectionTitle{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
+    .badge{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      min-width: 220px;
     }
-    .sectionTitle h1{
-      font-size: 16px;
-      margin: 0;
-      letter-spacing:.2px;
-    }
-
-    .form{
+    .badge .big{font-size:18px; font-weight:700; letter-spacing:.3px}
+    .badge .small{color:var(--muted); font-size:12px; margin-top:3px}
+    .badge.good{border-color: rgba(30,227,122,.35); box-shadow: 0 0 0 1px rgba(30,227,122,.1) inset}
+    .badge.ok{border-color: rgba(255,209,102,.35)}
+    .badge.bad{border-color: rgba(255,77,109,.35)}
+    .badge.no{border-color: rgba(255,45,85,.38)}
+    .kpis{
+      flex:1;
       display:grid;
+      grid-template-columns: repeat(3, 1fr);
       gap:10px;
+      min-width: 280px;
     }
-    label{
-      display:grid;
-      gap:6px;
-      font-size: 13px;
-      color: var(--muted);
+    @media (max-width: 700px){ .kpis{grid-template-columns:1fr 1fr} }
+    .kpi{
+      background: rgba(15,22,34,.8);
+      border:1px solid rgba(34,48,73,.7);
+      border-radius:14px;
+      padding:10px 10px;
     }
-    input, select, textarea{
+    .kpi .t{color:var(--muted); font-size:12px}
+    .kpi .v{font-size:16px; font-weight:700; margin-top:4px}
+    .kpi .s{color:var(--muted); font-size:12px; margin-top:4px}
+    table{
       width:100%;
-      min-height: var(--tap);
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding: 10px 12px;
-      outline:none;
-      font-size: 15px;
-    }
-    textarea{min-height: 84px; resize: vertical}
-    input::placeholder, textarea::placeholder{color: rgba(169,183,214,.55)}
-    .twoCol{
-      display:grid;
-      gap:10px;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .list{
-      display:grid;
-      gap:8px;
-      margin-top:10px;
-    }
-    .item{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      padding: 10px;
-      border:1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(255,255,255,.04);
-    }
-    .item .left{
-      display:grid;
-      gap:2px;
-      min-width: 0;
-    }
-    .item .left b{
-      font-size: 14px;
-      white-space: nowrap;
+      border-collapse:separate;
+      border-spacing:0;
       overflow:hidden;
-      text-overflow: ellipsis;
+      border-radius:14px;
+      border:1px solid rgba(34,48,73,.65);
+      background: rgba(15,22,34,.75);
     }
-    .item .left small{color: var(--muted)}
-    .item .right{
-      display:flex;
-      gap:8px;
-      align-items:center;
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(34,48,73,.5);
+      font-size:13px;
     }
-    .iconBtn{
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      font-weight: 900;
-      cursor:pointer;
+    th{color:var(--muted); text-align:left; font-weight:600; background: rgba(22,35,56,.35)}
+    tr:last-child td{border-bottom:0}
+    .right{ text-align:right }
+    .muted{color:var(--muted)}
+    .warn{color:var(--ok)}
+    .danger{color:var(--bad)}
+    .goodText{color:var(--good)}
+    .canvasWrap{
+      background: rgba(15,22,34,.78);
+      border:1px solid rgba(34,48,73,.7);
+      border-radius:14px;
+      padding:10px;
     }
-    .iconBtn.danger{
-      background: rgba(255,92,122,.10);
-      border-color: rgba(255,92,122,.30);
+    canvas{width:100%; height:210px; display:block}
+    .smallNote{color:var(--muted); font-size:12px; margin-top:8px}
+    .twoCols{
+      display:grid; gap:12px; grid-template-columns: 1fr 1fr;
     }
-
-    .hint{
-      color: var(--muted);
-      font-size: 12px;
-      line-height:1.4;
-    }
-    .divider{
-      height:1px;
-      background: var(--line);
-      margin: 10px 0;
-    }
-
-    canvas{width:100%; height: 220px; display:block}
-    .chartWrap{
-      display:grid;
-      gap:8px;
-    }
-    .legend{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .dot{
-      width:10px; height:10px; border-radius: 99px; display:inline-block; margin-right:6px;
-      border:1px solid rgba(255,255,255,.25);
-    }
-
-    .toast{
-      position: fixed;
-      left: 50%;
-      bottom: 92px;
-      transform: translateX(-50%);
-      background: rgba(17,27,46,.92);
-      border: 1px solid var(--line);
-      padding: 10px 12px;
-      border-radius: 12px;
-      color: var(--text);
-      font-weight: 700;
-      box-shadow: var(--shadow);
-      opacity:0;
-      pointer-events:none;
-      transition: opacity .18s ease, transform .18s ease;
-    }
-    .toast.show{
-      opacity:1;
-      transform: translateX(-50%) translateY(-4px);
-    }
-    .sr-only{
-      position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0;
-    }
+    @media (max-width: 850px){ .twoCols{grid-template-columns:1fr} }
+    .divider{height:1px; background: rgba(34,48,73,.55); margin:10px 0}
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div class="topbar">
-        <div class="brand">
-          <b>เงินเข้า-ออก & หนี้</b>
-          <small id="lastSaved">ยังไม่บันทึก</small>
-        </div>
-        <div class="actions">
-          <span class="pill" id="monthLabel"></span>
-          <button class="btn-danger" id="resetBtn" type="button">ล้างข้อมูล</button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Views -->
-    <main id="viewRoot"></main>
-
-    <!-- Bottom tabs -->
-    <div class="tabs">
-      <div class="tabbar">
-        <div class="tab active" data-tab="dashboard">Dashboard</div>
-        <div class="tab" data-tab="income">Income</div>
-        <div class="tab" data-tab="debts">Debts</div>
-        <div class="tab" data-tab="plan">Plan</div>
-      </div>
+  <header>
+    <div>
+      <h1>Can I Afford This? <span class="muted">| ซื้อไหวไหม</span></h1>
+      <div class="sub">Brutal cashflow + emergency fund + stress test. <span class="muted">คำนวณแบบ “ความจริง” ไม่ใช่แค่ % ของเงินเดือน</span></div>
     </div>
-  </div>
+    <div class="topActions">
+      <button id="btnSave">Save | บันทึก</button>
+      <button id="btnLoad" class="secondary">Load | โหลด</button>
+      <button id="btnReset" class="secondary">Reset | ล้างค่า</button>
+    </div>
+  </header>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <main>
+    <!-- LEFT: INPUTS -->
+    <section class="card">
+      <div class="cardHead">
+        <div>
+          <h2>Inputs | ข้อมูล</h2>
+          <div class="hint">THB amounts are monthly unless stated. <span class="muted">ตัวเลขเป็น “ต่อเดือน” ยกเว้นระบุว่าเป็นครั้งเดียว</span></div>
+        </div>
+        <div class="tabs" id="tabs">
+          <div class="tab active" data-tab="item">Item | ของ</div>
+          <div class="tab" data-tab="income">Income | รายได้</div>
+          <div class="tab" data-tab="oblig">Obligations | ภาระ</div>
+          <div class="tab" data-tab="behavior">Behavior | พฤติกรรม</div>
+        </div>
+      </div>
 
-  <script>
-    (function(){
-      "use strict";
-
-      // ---------- Utilities ----------
-      const $ = (sel, el=document) => el.querySelector(sel);
-      const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
-
-      const STORAGE_KEY = "thai_finance_debt_tracker_v1";
-
-      function nowISO(){
-        const d = new Date();
-        const pad = n => String(n).padStart(2,"0");
-        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      }
-
-      function toNumber(v){
-        if (typeof v === "number") return isFinite(v) ? v : 0;
-        if (!v) return 0;
-        const s = String(v).replace(/[^\d.-]/g,"");
-        const n = parseFloat(s);
-        return isFinite(n) ? n : 0;
-      }
-
-      function formatTHB(n){
-        const x = Math.round(toNumber(n));
-        return x.toLocaleString("th-TH") + " ฿";
-      }
-
-      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-      function showToast(msg){
-        const t = $("#toast");
-        t.textContent = msg;
-        t.classList.add("show");
-        clearTimeout(showToast._timer);
-        showToast._timer = setTimeout(()=>t.classList.remove("show"), 1400);
-      }
-
-      function uid(){
-        return Math.random().toString(16).slice(2) + Date.now().toString(16);
-      }
-
-      // ---------- Data Model ----------
-      const defaultState = {
-        meta: { lastSaved: null },
-        settings: {
-          month: new Date().toISOString().slice(0,7), // YYYY-MM
-          currency: "THB"
-        },
-        incomeMonthly: 0,
-        fixedExpenses: [
-          // {id, name, amount}
-          { id: uid(), name: "ค่าเช่า/ผ่อนบ้าน", amount: 0 },
-          { id: uid(), name: "ค่าน้ำ/ไฟ", amount: 0 }
-        ],
-        debts: [
-          // {id, type, name, balance, apr, minPayment, dueDay, note}
-          // type: "credit" | "installment"
-        ]
-      };
-
-      const store = {
-        load(){
-          try{
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return structuredClone(defaultState);
-            const parsed = JSON.parse(raw);
-
-            // Backfill missing keys safely
-            const st = structuredClone(defaultState);
-            Object.assign(st, parsed || {});
-            st.meta = Object.assign(st.meta, parsed?.meta || {});
-            st.settings = Object.assign(st.settings, parsed?.settings || {});
-            st.fixedExpenses = Array.isArray(parsed?.fixedExpenses) ? parsed.fixedExpenses : st.fixedExpenses;
-            st.debts = Array.isArray(parsed?.debts) ? parsed.debts : st.debts;
-
-            // Ensure ids exist
-            st.fixedExpenses = st.fixedExpenses.map(x => ({ id: x.id || uid(), name: x.name || "รายการ", amount: toNumber(x.amount) }));
-            st.debts = st.debts.map(d => ({
-              id: d.id || uid(),
-              type: d.type === "installment" ? "installment" : "credit",
-              name: d.name || (d.type === "installment" ? "สินเชื่อ/ผ่อนสินค้า" : "บัตรเครดิต"),
-              balance: toNumber(d.balance),
-              apr: toNumber(d.apr),
-              minPayment: toNumber(d.minPayment),
-              dueDay: clamp(Math.floor(toNumber(d.dueDay || 1)), 1, 31),
-              note: d.note || ""
-            }));
-            st.incomeMonthly = toNumber(st.incomeMonthly);
-            return st;
-          }catch(e){
-            console.warn("Load failed, using default", e);
-            return structuredClone(defaultState);
-          }
-        },
-        save(state){
-          state.meta.lastSaved = nowISO();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        },
-        reset(){
-          localStorage.removeItem(STORAGE_KEY);
-        }
-      };
-
-      let state = store.load();
-
-      // ---------- Computations ----------
-      function totals(){
-        const income = toNumber(state.incomeMonthly);
-        const fixedTotal = state.fixedExpenses.reduce((s,x)=>s + toNumber(x.amount), 0);
-        const debtMinTotal = state.debts.reduce((s,d)=>s + toNumber(d.minPayment), 0);
-        const left = income - fixedTotal - debtMinTotal;
-        const debtBalanceTotal = state.debts.reduce((s,d)=>s + toNumber(d.balance), 0);
-        return { income, fixedTotal, debtMinTotal, left, debtBalanceTotal };
-      }
-
-      function cashTone(left){
-        if (left >= 3000) return "good";
-        if (left >= 0) return "warn";
-        return "bad";
-      }
-
-      function dueStatus(dueDay){
-        // Compare dueDay with today's day, rough indicator (no backend, per-month UI)
-        const today = new Date().getDate();
-        const diff = dueDay - today;
-        if (diff < 0) return { label: "เลยกำหนด", color: "var(--bad)" };
-        if (diff <= 3) return { label: "ใกล้ถึงกำหนด", color: "var(--warn)" };
-        return { label: "ปกติ", color: "var(--good)" };
-      }
-
-      // ---------- Rendering ----------
-      const viewRoot = $("#viewRoot");
-
-      function setMonthLabel(){
-        const m = state.settings.month || new Date().toISOString().slice(0,7);
-        const [yy, mm] = m.split("-");
-        const thMonths = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-        const label = `${thMonths[(+mm)-1]} ${(+yy)+543}`;
-        $("#monthLabel").textContent = label;
-      }
-
-      function setLastSaved(){
-        const s = state.meta.lastSaved;
-        $("#lastSaved").textContent = s ? `บันทึกล่าสุด: ${s}` : "ยังไม่บันทึก";
-      }
-
-      function renderDashboard(){
-        const t = totals();
-        const tone = cashTone(t.left);
-
-        const debtsSorted = [...state.debts].sort((a,b)=>toNumber(b.balance)-toNumber(a.balance));
-
-        viewRoot.innerHTML = `
-          <div class="grid two">
-            <section class="card">
-              <h2>เงินคงเหลือปลายเดือน</h2>
-              <div class="hero">
-                <div>
-                  <div class="value ${tone}">${formatTHB(t.left)}</div>
-                  <div class="sub">คำนวณจาก รายรับ - รายจ่ายคงที่ - ยอดชำระหนี้ขั้นต่ำ</div>
-                </div>
-                <div class="pill">อัปเดตแบบออฟไลน์ (localStorage)</div>
+      <div class="cardBody">
+        <!-- ITEM -->
+        <div class="tabPanel" id="tab-item">
+          <div class="grid2">
+            <div class="row">
+              <label>Item name | ชื่อของ (optional)</label>
+              <div class="field">
+                <span class="prefix">🧾</span>
+                <input id="itemName" placeholder="iPhone / Trip / Bike / etc." />
               </div>
-
-              <div class="divider"></div>
-
-              <div class="row">
-                <div class="label">รายรับต่อเดือน</div>
-                <div class="amt">${formatTHB(t.income)}</div>
-              </div>
-              <div class="row">
-                <div class="label">รายจ่ายคงที่รวม</div>
-                <div class="amt">${formatTHB(t.fixedTotal)}</div>
-              </div>
-              <div class="row">
-                <div class="label">ชำระหนี้ขั้นต่ำรวม</div>
-                <div class="amt">${formatTHB(t.debtMinTotal)}</div>
-              </div>
-              <div class="row">
-                <div class="label">ยอดหนี้คงค้างรวม</div>
-                <div class="amt">${formatTHB(t.debtBalanceTotal)}</div>
-              </div>
-
-              <div class="divider"></div>
-              <div class="hint">
-                ทิป: ถ้า “เงินคงเหลือ” ติดลบ ให้เริ่มจากลดรายจ่ายคงที่ หรือเพิ่มการจ่ายหนี้แบบจัดลำดับ (ดูแท็บ Plan)
-              </div>
-            </section>
-
-            <section class="grid cards">
-              <div class="card">
-                <h2>Action</h2>
-                <div class="form">
-                  <button class="btn-primary" type="button" id="goIncome">แก้ไขรายรับ/รายจ่าย</button>
-                  <button class="btn-primary" type="button" id="goDebts">เพิ่ม/แก้ไขหนี้</button>
-                </div>
-                <div class="divider"></div>
-                <div class="hint">ทุกอย่างบันทึกอัตโนมัติบนเครื่องของคุณ</div>
-              </div>
-
-              <div class="card">
-                <h2>หนี้ใกล้ถึงกำหนด</h2>
-                <div class="list" id="dueList"></div>
-                <div class="hint" id="dueHint"></div>
-              </div>
-
-              <div class="card">
-                <h2>สรุปเร็ว</h2>
-                <div class="hint">ถ้าไม่มีหนี้ ลองเพิ่มเป้าหมายเงินเก็บใน Plan</div>
-                <div class="divider"></div>
-                <div class="row">
-                  <div class="label">จำนวนรายการรายจ่ายคงที่</div>
-                  <div class="amt">${state.fixedExpenses.length}</div>
-                </div>
-                <div class="row">
-                  <div class="label">จำนวนหนี้ทั้งหมด</div>
-                  <div class="amt">${state.debts.length}</div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <div class="grid charts" style="margin-top:12px">
-            <section class="card">
-              <div class="sectionTitle">
-                <h1>ภาพรวมเงิน (Pie)</h1>
-                <span class="pill">Fixed / Debt / Left</span>
-              </div>
-              <div class="chartWrap">
-                <canvas id="pieChart" width="640" height="260" aria-label="Spending pie chart"></canvas>
-                <div class="legend" id="pieLegend"></div>
-              </div>
-            </section>
-
-            <section class="card">
-              <div class="sectionTitle">
-                <h1>ยอดหนี้คงค้าง (Bar)</h1>
-                <span class="pill">ตามรายการหนี้</span>
-              </div>
-              <div class="chartWrap">
-                <canvas id="barChart" width="640" height="260" aria-label="Debt bar chart"></canvas>
-                <div class="hint" id="barHint"></div>
-              </div>
-            </section>
-          </div>
-        `;
-
-        // Due list
-        const dueList = $("#dueList");
-        const soon = state.debts
-          .map(d => ({...d, status: dueStatus(d.dueDay)}))
-          .sort((a,b)=>{
-            // overdue first, then closest
-            const da = a.dueDay - new Date().getDate();
-            const db = b.dueDay - new Date().getDate();
-            return da - db;
-          })
-          .slice(0,4);
-
-        if (soon.length === 0){
-          $("#dueHint").textContent = "ยังไม่มีหนี้ในระบบ";
-        } else {
-          dueList.innerHTML = soon.map(d => {
-            return `
-              <div class="item">
-                <div class="left">
-                  <b>${escapeHTML(d.name)}</b>
-                  <small>กำหนดชำระวันที่ ${d.dueDay} • ${d.type === "credit" ? "บัตรเครดิต" : "ผ่อน/สินเชื่อ"}</small>
-                </div>
-                <div class="right">
-                  <span class="pill" style="border-color: ${d.status.color}; color:${d.status.color}">${d.status.label}</span>
-                </div>
-              </div>
-            `;
-          }).join("");
-          $("#dueHint").textContent = "";
-        }
-
-        // Buttons
-        $("#goIncome").addEventListener("click", ()=>setTab("income"));
-        $("#goDebts").addEventListener("click", ()=>setTab("debts"));
-
-        // Charts
-        drawMoneyPieChart($("#pieChart"), $("#pieLegend"));
-        drawDebtBarChart($("#barChart"), $("#barHint"));
-      }
-
-      function renderIncome(){
-        const t = totals();
-
-        viewRoot.innerHTML = `
-          <div class="card">
-            <div class="sectionTitle">
-              <h1>รายรับ & รายจ่ายคงที่</h1>
-              <span class="pill">บันทึกอัตโนมัติ</span>
             </div>
 
-            <div class="form">
-              <label>
-                รายรับต่อเดือน (บาท)
-                <input id="incomeInput" inputmode="numeric" placeholder="เช่น 35000" value="${state.incomeMonthly ? String(state.incomeMonthly) : ""}">
-              </label>
-
-              <div class="divider"></div>
-
-              <div class="sectionTitle">
-                <h1>รายการรายจ่ายคงที่</h1>
-                <button class="btn" type="button" id="addFixed">+ เพิ่มรายการ</button>
+            <div class="row">
+              <label>Item price (one-time) | ราคา (ครั้งเดียว)</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="itemPrice" type="number" min="0" step="100" value="25000" />
               </div>
+            </div>
 
-              <div class="list" id="fixedList"></div>
-
-              <div class="divider"></div>
-
-              <div class="row">
-                <div class="label">รวมรายจ่ายคงที่</div>
-                <div class="amt">${formatTHB(t.fixedTotal)}</div>
+            <div class="row">
+              <label>Extra one-time costs | ค่าใช้จ่ายเพิ่ม (ครั้งเดียว)</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="oneTimeExtra" type="number" min="0" step="100" value="0" />
               </div>
-
-              <div class="hint">ตัวอย่างรายจ่ายคงที่: ค่าเช่า/ผ่อนบ้าน, ค่าน้ำไฟ, ค่าโทรศัพท์, ค่าเดินทาง, สมาชิก/ประกัน</div>
-            </div>
-          </div>
-        `;
-
-        const incomeInput = $("#incomeInput");
-        incomeInput.addEventListener("input", ()=>{
-          state.incomeMonthly = toNumber(incomeInput.value);
-          autosave();
-          // Keep view summary fresh (cheap re-render)
-          renderIncome();
-          incomeInput.focus();
-          incomeInput.setSelectionRange(incomeInput.value.length, incomeInput.value.length);
-        });
-
-        const fixedList = $("#fixedList");
-        fixedList.innerHTML = state.fixedExpenses.map(x => fixedRowHTML(x)).join("");
-
-        $$("#fixedList .item").forEach(el=>{
-          const id = el.getAttribute("data-id");
-          const nameEl = el.querySelector(".fx-name");
-          const amtEl = el.querySelector(".fx-amt");
-          const delEl = el.querySelector(".fx-del");
-
-          nameEl.addEventListener("input", ()=>{
-            const it = state.fixedExpenses.find(a=>a.id===id);
-            if (!it) return;
-            it.name = nameEl.value.trim() || "รายการ";
-            autosave();
-          });
-
-          amtEl.addEventListener("input", ()=>{
-            const it = state.fixedExpenses.find(a=>a.id===id);
-            if (!it) return;
-            it.amount = toNumber(amtEl.value);
-            autosave();
-            // refresh totals without losing editing context: minimal re-render for totals only
-            // simplest MVP: full re-render
-            renderIncome();
-            // restore focus
-            const restored = document.querySelector(`[data-id="${cssEscape(id)}"] .fx-amt`);
-            if (restored){
-              restored.focus();
-              restored.setSelectionRange(restored.value.length, restored.value.length);
-            }
-          });
-
-          delEl.addEventListener("click", ()=>{
-            state.fixedExpenses = state.fixedExpenses.filter(a=>a.id!==id);
-            autosave();
-            renderIncome();
-          });
-        });
-
-        $("#addFixed").addEventListener("click", ()=>{
-          state.fixedExpenses.unshift({ id: uid(), name: "รายการใหม่", amount: 0 });
-          autosave();
-          renderIncome();
-          const first = $("#fixedList .fx-name");
-          if (first) first.focus();
-        });
-      }
-
-      function fixedRowHTML(x){
-        return `
-          <div class="item" data-id="${x.id}">
-            <div class="left" style="width:100%">
-              <label class="sr-only">ชื่อรายการ</label>
-              <input class="fx-name" value="${escapeHTMLAttr(x.name)}" placeholder="ชื่อรายการ เช่น ค่าเช่า" />
-              <small>จำนวนเงิน (บาท)</small>
-              <input class="fx-amt" inputmode="numeric" value="${x.amount ? String(x.amount) : ""}" placeholder="เช่น 8000" />
-            </div>
-            <div class="right">
-              <button class="iconBtn danger fx-del" type="button" title="ลบ">✕</button>
-            </div>
-          </div>
-        `;
-      }
-
-      function renderDebts(){
-        viewRoot.innerHTML = `
-          <div class="card">
-            <div class="sectionTitle">
-              <h1>หนี้ (บัตรเครดิต/ผ่อน/สินเชื่อ)</h1>
-              <button class="btn" type="button" id="addDebt">+ เพิ่มหนี้</button>
             </div>
 
-            <div class="hint">
-              กรอก “ยอดชำระขั้นต่ำ” เพื่อให้ Dashboard คำนวณเงินคงเหลือได้ทันที<br>
-              (ถ้าไม่แน่ใจ ให้ใส่ยอดที่ต้องจ่ายต่อเดือน)
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="list" id="debtList"></div>
-          </div>
-        `;
-
-        const list = $("#debtList");
-        if (state.debts.length === 0){
-          list.innerHTML = `<div class="hint">ยังไม่มีหนี้ — กด “เพิ่มหนี้” เพื่อเริ่ม</div>`;
-        } else {
-          list.innerHTML = state.debts
-            .map(d => debtCardHTML(d))
-            .join("");
-        }
-
-        // Wire events
-        $$("#debtList .debt").forEach(card=>{
-          const id = card.getAttribute("data-id");
-          const get = () => state.debts.find(x=>x.id===id);
-
-          const typeEl = card.querySelector(".d-type");
-          const nameEl = card.querySelector(".d-name");
-          const balEl  = card.querySelector(".d-balance");
-          const aprEl  = card.querySelector(".d-apr");
-          const minEl  = card.querySelector(".d-min");
-          const dueEl  = card.querySelector(".d-due");
-          const noteEl = card.querySelector(".d-note");
-          const delEl  = card.querySelector(".d-del");
-
-          const onAny = ()=>{
-            const d = get(); if (!d) return;
-            d.type = typeEl.value === "installment" ? "installment" : "credit";
-            d.name = nameEl.value.trim() || (d.type === "installment" ? "สินเชื่อ/ผ่อนสินค้า" : "บัตรเครดิต");
-            d.balance = toNumber(balEl.value);
-            d.apr = toNumber(aprEl.value);
-            d.minPayment = toNumber(minEl.value);
-            d.dueDay = clamp(Math.floor(toNumber(dueEl.value || 1)), 1, 31);
-            d.note = noteEl.value || "";
-            autosave();
-          };
-
-          [typeEl, nameEl, balEl, aprEl, minEl, dueEl, noteEl].forEach(el=>{
-            el.addEventListener("input", onAny);
-            el.addEventListener("change", onAny);
-          });
-
-          delEl.addEventListener("click", ()=>{
-            state.debts = state.debts.filter(x=>x.id!==id);
-            autosave();
-            renderDebts();
-          });
-        });
-
-        $("#addDebt").addEventListener("click", ()=>{
-          state.debts.unshift({
-            id: uid(),
-            type: "credit",
-            name: "บัตรเครดิต",
-            balance: 0,
-            apr: 16,
-            minPayment: 0,
-            dueDay: 25,
-            note: ""
-          });
-          autosave();
-          renderDebts();
-          const first = $("#debtList .d-name");
-          if (first) first.focus();
-        });
-      }
-
-      function debtCardHTML(d){
-        const st = dueStatus(d.dueDay);
-        return `
-          <div class="item debt" data-id="${d.id}" style="flex-direction:column; align-items:stretch">
-            <div style="display:flex; gap:10px; align-items:flex-start; justify-content:space-between; width:100%">
-              <div class="left" style="width:100%">
-                <div class="twoCol">
-                  <label>
-                    ประเภท
-                    <select class="d-type">
-                      <option value="credit" ${d.type==="credit"?"selected":""}>บัตรเครดิต</option>
-                      <option value="installment" ${d.type==="installment"?"selected":""}>ผ่อน/สินเชื่อ</option>
-                    </select>
-                  </label>
-                  <label>
-                    ชื่อหนี้
-                    <input class="d-name" placeholder="เช่น KBank Card / ผ่อนมือถือ" value="${escapeHTMLAttr(d.name)}" />
-                  </label>
-                </div>
-
-                <div class="twoCol">
-                  <label>
-                    ยอดคงค้าง (บาท)
-                    <input class="d-balance" inputmode="numeric" placeholder="เช่น 25000" value="${d.balance?String(d.balance):""}" />
-                  </label>
-                  <label>
-                    ยอดชำระขั้นต่ำ/ต่อเดือน (บาท)
-                    <input class="d-min" inputmode="numeric" placeholder="เช่น 1500" value="${d.minPayment?String(d.minPayment):""}" />
-                  </label>
-                </div>
-
-                <div class="twoCol">
-                  <label>
-                    ดอกเบี้ยต่อปี (APR %)
-                    <input class="d-apr" inputmode="decimal" placeholder="เช่น 16" value="${d.apr?String(d.apr):""}" />
-                  </label>
-                  <label>
-                    กำหนดชำระ (วันที่ 1-31)
-                    <input class="d-due" inputmode="numeric" placeholder="เช่น 25" value="${d.dueDay?String(d.dueDay):""}" />
-                  </label>
-                </div>
-
-                <label>
-                  โน้ต (ไม่บังคับ)
-                  <textarea class="d-note" placeholder="เช่น จ่ายก่อนวันที่ 25 ทุกเดือน">${escapeHTML(d.note||"")}</textarea>
-                </label>
-
-                <div class="legend">
-                  <span class="pill" style="border-color:${st.color}; color:${st.color}">สถานะ: ${st.label}</span>
-                </div>
-              </div>
-
-              <div class="right">
-                <button class="iconBtn danger d-del" type="button" title="ลบหนี้">✕</button>
+            <div class="row">
+              <label>Recurring cost / month | ค่าใช้จ่ายรายเดือน</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="recurringMonthly" type="number" min="0" step="50" value="0" />
               </div>
             </div>
           </div>
-        `;
-      }
 
-      function renderPlan(){
-        const t = totals();
-        const extra = Math.max(0, t.left); // only positive leftover for payoff
-        const debts = [...state.debts].map(d=>({
-          ...d,
-          // rough monthly interest estimate
-          estInterest: toNumber(d.balance) * (toNumber(d.apr)/100) / 12
-        }));
+          <div class="divider"></div>
 
-        // Strategy: avalanche (highest APR first) by default
-        debts.sort((a,b)=>toNumber(b.apr)-toNumber(a.apr));
-
-        const payoff = debts.map(d=>{
-          const min = toNumber(d.minPayment);
-          const add = extra > 0 ? extra : 0; // naive: all leftover to first debt
-          return {
-            ...d,
-            suggestedPayment: d === debts[0] ? (min + add) : min
-          };
-        });
-
-        viewRoot.innerHTML = `
-          <div class="grid two">
-            <section class="card">
-              <div class="sectionTitle">
-                <h1>Plan (แบบง่าย)</h1>
-                <span class="pill">Avalanche: ดอกสูงก่อน</span>
-              </div>
-
-              <div class="hint">
-                นี่เป็น “แผนเบื้องต้น” เพื่อช่วยตัดสินใจ ไม่ใช่คำแนะนำการเงินแบบมืออาชีพ<br>
-                หลักการ: จ่ายขั้นต่ำทุกก้อน แล้วเอาเงินคงเหลือไปโปะหนี้ดอกสูงสุดก่อน
-              </div>
-
-              <div class="divider"></div>
-
-              <div class="row">
-                <div class="label">เงินคงเหลือ (ใช้โปะหนี้ได้)</div>
-                <div class="amt">${formatTHB(extra)}</div>
-              </div>
-              <div class="row">
-                <div class="label">ถ้าเงินคงเหลือติดลบ</div>
-                <div class="amt">ให้ลดรายจ่าย/เพิ่มรายรับก่อน</div>
-              </div>
-
-              <div class="divider"></div>
-              <div class="hint">
-                ถ้าหนี้เป็นบัตรเครดิต และจ่ายแค่ขั้นต่ำ ดอกเบี้ยจะสะสมเร็วมาก — การโปะเพิ่มแม้เล็กน้อยช่วยได้เยอะ
-              </div>
-            </section>
-
-            <section class="card">
-              <div class="sectionTitle">
-                <h1>Suggested payments</h1>
-                <span class="pill">ต่อเดือน</span>
-              </div>
-              <div class="list" id="payList"></div>
-              <div class="hint" id="payHint"></div>
-            </section>
-          </div>
-        `;
-
-        const payList = $("#payList");
-        if (payoff.length === 0){
-          $("#payHint").textContent = "ยังไม่มีหนี้ — ไปเพิ่มในแท็บ Debts";
-          payList.innerHTML = "";
-          return;
-        }
-
-        payList.innerHTML = payoff.map((d, idx)=>{
-          const badge = idx===0 && extra>0 ? `<span class="pill" style="border-color: rgba(61,220,151,.45); color: var(--good)">โปะเพิ่ม</span>` : "";
-          return `
-            <div class="item">
-              <div class="left">
-                <b>${escapeHTML(d.name)}</b>
-                <small>APR ${toNumber(d.apr).toFixed(1)}% • ดอกโดยประมาณ/เดือน ${formatTHB(d.estInterest)}</small>
-              </div>
-              <div class="right" style="flex-direction:column; align-items:flex-end">
-                <div style="font-weight:900">${formatTHB(d.suggestedPayment)}</div>
-                ${badge}
+          <div class="grid2">
+            <div class="row">
+              <label>Payment method | วิธีจ่าย</label>
+              <div class="field">
+                <span class="prefix">💳</span>
+                <select id="payMethod">
+                  <option value="cash">Cash | เงินสด</option>
+                  <option value="cc_full">Credit card (pay full) | บัตรเครดิต จ่ายเต็ม</option>
+                  <option value="inst0">Installment 0% | ผ่อน 0%</option>
+                  <option value="inst_int">Installment w/ interest | ผ่อนมีดอก</option>
+                </select>
               </div>
             </div>
-          `;
-        }).join("");
 
-        $("#payHint").textContent = extra>0
-          ? "ระบบเอาเงินคงเหลือทั้งหมดไปโปะหนี้ดอกสูงสุด (ปรับเองได้โดยแก้ “ยอดชำระขั้นต่ำ/ต่อเดือน”)"
-          : "เงินคงเหลือไม่พอสำหรับโปะเพิ่ม — โฟกัสทำให้เงินคงเหลือเป็นบวกก่อน";
-      }
+            <div class="row">
+              <label>Down payment (one-time) | เงินดาวน์ (ครั้งเดียว)</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="downPayment" type="number" min="0" step="100" value="0" />
+              </div>
+            </div>
 
-      // ---------- Simple Charts (Canvas) ----------
-      function drawMoneyPieChart(canvas, legendEl){
-        const ctx = canvas.getContext("2d");
-        const dpr = window.devicePixelRatio || 1;
+            <div class="row">
+              <label>Months (for installment) | จำนวนเดือน (ผ่อน)</label>
+              <div class="field">
+                <span class="prefix">mo</span>
+                <input id="instMonths" type="number" min="1" step="1" value="10" />
+              </div>
+            </div>
 
-        // Resize for crispness
-        const cssW = canvas.clientWidth;
-        const cssH = canvas.clientHeight;
-        canvas.width = Math.floor(cssW * dpr);
-        canvas.height = Math.floor(cssH * dpr);
-        ctx.setTransform(dpr,0,0,dpr,0,0);
+            <div class="row">
+              <label>APR % (if interest) | ดอกเบี้ยต่อปี % (ถ้ามี)</label>
+              <div class="field">
+                <span class="prefix">%</span>
+                <input id="apr" type="number" min="0" step="0.1" value="18" />
+              </div>
+            </div>
+          </div>
 
-        const t = totals();
-        const income = Math.max(0, t.income);
-        const fixed = Math.max(0, t.fixedTotal);
-        const debtPay = Math.max(0, t.debtMinTotal);
-        const left = Math.max(0, income - fixed - debtPay);
+          <div class="smallNote">
+            Logic | ตรรกะ: Installment uses standard amortization if interest; 0% = principal/month.
+          </div>
+        </div>
 
-        // Avoid divide by zero: if no income, show empty chart
-        const total = fixed + debtPay + left;
-        const data = [
-          { label: "รายจ่ายคงที่", value: fixed, color: "rgba(255,255,255,.32)" },
-          { label: "ชำระหนี้ขั้นต่ำ", value: debtPay, color: "rgba(255,209,102,.70)" },
-          { label: "เงินคงเหลือ", value: left, color: "rgba(61,220,151,.70)" },
-        ];
+        <!-- INCOME -->
+        <div class="tabPanel" id="tab-income" style="display:none">
+          <div class="grid2">
+            <div class="row">
+              <label>Monthly net income | รายได้สุทธิ/เดือน</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="incomeNet" type="number" min="0" step="100" value="45000" />
+              </div>
+            </div>
 
-        // Clear
-        ctx.clearRect(0,0,cssW,cssH);
+            <div class="row">
+              <label>Extra income avg / month | รายได้เสริมเฉลี่ย/เดือน</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="incomeExtra" type="number" min="0" step="100" value="0" />
+              </div>
+            </div>
+          </div>
 
-        // Background ring
-        const cx = cssW/2, cy = cssH/2;
-        const r = Math.min(cssW, cssH)*0.36;
-        const rInner = r*0.62;
+          <div class="divider"></div>
 
-        // Base
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI*2);
-        ctx.arc(cx, cy, rInner, 0, Math.PI*2, true);
-        ctx.closePath();
-        ctx.fillStyle = "rgba(255,255,255,.06)";
-        ctx.fill();
+          <div class="grid2">
+            <div class="row">
+              <label>Current savings balance | เงินออมปัจจุบัน</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="savingsNow" type="number" min="0" step="100" value="60000" />
+              </div>
+            </div>
 
-        if (total <= 0){
-          // Text
-          ctx.fillStyle = "rgba(169,183,214,.8)";
-          ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-          ctx.textAlign = "center";
-          ctx.fillText("ยังไม่มีข้อมูลรายรับ/รายจ่าย", cx, cy);
-          legendEl.innerHTML = "";
-          return;
-        }
+            <div class="row">
+              <label>Emergency fund target (months) | เป้ากองฉุกเฉิน (เดือน)</label>
+              <div class="field">
+                <span class="prefix">mo</span>
+                <input id="emTarget" type="number" min="0" step="0.5" value="3" />
+              </div>
+            </div>
+          </div>
+        </div>
 
-        let start = -Math.PI/2;
-        data.forEach(seg=>{
-          const frac = seg.value/total;
-          const end = start + frac * Math.PI*2;
+        <!-- OBLIGATIONS -->
+        <div class="tabPanel" id="tab-oblig" style="display:none">
+          <div class="grid2">
+            <div class="row">
+              <label>Rent / mortgage | ค่าเช่า/ผ่อนบ้าน</label>
+              <div class="field"><span class="prefix">THB</span><input id="rent" type="number" min="0" step="100" value="12000" /></div>
+            </div>
+            <div class="row">
+              <label>Debt minimum payments | ผ่อนหนี้ขั้นต่ำ</label>
+              <div class="field"><span class="prefix">THB</span><input id="debtMin" type="number" min="0" step="100" value="5000" /></div>
+            </div>
 
-          ctx.beginPath();
-          ctx.moveTo(cx,cy);
-          ctx.arc(cx, cy, r, start, end);
-          ctx.closePath();
-          ctx.fillStyle = seg.color;
-          ctx.fill();
+            <div class="row">
+              <label>Family support | ส่งให้บ้าน</label>
+              <div class="field"><span class="prefix">THB</span><input id="family" type="number" min="0" step="100" value="0" /></div>
+            </div>
+            <div class="row">
+              <label>Utilities + phone + internet | ค่าน้ำไฟ+โทรศัพท์+เน็ต</label>
+              <div class="field"><span class="prefix">THB</span><input id="utilities" type="number" min="0" step="50" value="2500" /></div>
+            </div>
 
-          start = end;
-        });
+            <div class="row">
+              <label>Transport baseline | ค่าเดินทางพื้นฐาน</label>
+              <div class="field"><span class="prefix">THB</span><input id="transport" type="number" min="0" step="100" value="3500" /></div>
+            </div>
+            <div class="row">
+              <label>Insurance (optional) | ประกัน (ถ้ามี)</label>
+              <div class="field"><span class="prefix">THB</span><input id="insurance" type="number" min="0" step="100" value="0" /></div>
+            </div>
+          </div>
+        </div>
 
-        // Hole
-        ctx.beginPath();
-        ctx.arc(cx, cy, rInner, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(11,18,32,1)";
-        ctx.fill();
+        <!-- BEHAVIOR -->
+        <div class="tabPanel" id="tab-behavior" style="display:none">
+          <div class="row">
+            <label>Variable spend preset | ค่าใช้จ่ายแปรผัน (โหมดเร็ว)</label>
+            <div class="chips" id="spendPreset">
+              <div class="chip" data-v="low">Low | ประหยัด</div>
+              <div class="chip active" data-v="normal">Normal | ปกติ</div>
+              <div class="chip" data-v="high">High | ใช้เยอะ</div>
+              <div class="chip" data-v="custom">Custom | กำหนดเอง</div>
+            </div>
+          </div>
 
-        // Center text
-        ctx.fillStyle = "rgba(232,238,252,.95)";
-        ctx.font = "900 16px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("รวมใช้จ่าย", cx, cy - 6);
-        ctx.fillStyle = "rgba(169,183,214,.9)";
-        ctx.font = "800 14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-        ctx.fillText(formatTHB(fixed + debtPay), cx, cy + 16);
+          <div class="grid2" style="margin-top:10px">
+            <div class="row">
+              <label>Variable spend / month | ค่าใช้จ่ายแปรผัน/เดือน</label>
+              <div class="field">
+                <span class="prefix">THB</span>
+                <input id="variableSpend" type="number" min="0" step="100" value="14000" />
+              </div>
+              <div class="smallNote">Food + coffee + entertainment + shopping. <span class="muted">รวมกิน/กาแฟ/เที่ยว/ช้อป</span></div>
+            </div>
 
-        // Legend
-        legendEl.innerHTML = data.map(seg=>{
-          return `<span><span class="dot" style="background:${seg.color}"></span>${seg.label}: ${formatTHB(seg.value)}</span>`;
-        }).join("");
-      }
+            <div class="row">
+              <label>Invest return assumption | สมมติผลตอบแทนลงทุน</label>
+              <div class="field">
+                <span class="prefix">%</span>
+                <input id="investRate" type="number" min="0" step="0.5" value="6" />
+              </div>
+              <div class="smallNote">Used for opportunity cost. <span class="muted">ใช้คำนวณ “ถ้าไม่ซื้อแล้วเอาไปลงทุน”</span></div>
+            </div>
+          </div>
 
-      function drawDebtBarChart(canvas, hintEl){
-        const ctx = canvas.getContext("2d");
-        const dpr = window.devicePixelRatio || 1;
+          <div class="divider"></div>
 
-        const cssW = canvas.clientWidth;
-        const cssH = canvas.clientHeight;
-        canvas.width = Math.floor(cssW * dpr);
-        canvas.height = Math.floor(cssH * dpr);
-        ctx.setTransform(dpr,0,0,dpr,0,0);
+          <div class="row">
+            <label>Stress test | ทดสอบเดือนแย่ๆ</label>
+            <div class="chips" id="stressChips">
+              <div class="chip active" data-s="none">None | ไม่ทดสอบ</div>
+              <div class="chip" data-s="income10">Income -10% | รายได้ -10%</div>
+              <div class="chip" data-s="shock10">Shock 10,000 | เหตุฉุกเฉิน 10,000</div>
+              <div class="chip" data-s="shock30">Shock 30,000 | เหตุฉุกเฉิน 30,000</div>
+              <div class="chip" data-s="aprPlus3">APR +3% | ดอก +3%</div>
+            </div>
+            <div class="smallNote">Stress affects the verdict and “worst-month” balance. <span class="muted">เอาไว้ดูว่า “พังไหม” ถ้าเดือนนั้นไม่ปกติ</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        ctx.clearRect(0,0,cssW,cssH);
+    <!-- RIGHT: RESULTS -->
+    <section class="card">
+      <div class="cardHead">
+        <div>
+          <h2>Results | ผลลัพธ์</h2>
+          <div class="hint">Updates instantly. <span class="muted">คำนวณทันที</span></div>
+        </div>
+        <div class="hint" id="lastUpdated"></div>
+      </div>
 
-        const debts = [...state.debts].sort((a,b)=>toNumber(b.balance)-toNumber(a.balance)).slice(0,8);
-        if (debts.length === 0){
-          ctx.fillStyle = "rgba(169,183,214,.8)";
-          ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-          ctx.textAlign = "center";
-          ctx.fillText("ยังไม่มีหนี้", cssW/2, cssH/2);
-          hintEl.textContent = "เพิ่มหนี้ในแท็บ Debts เพื่อดูกราฟ";
-          return;
-        }
-        hintEl.textContent = debts.length < state.debts.length ? "แสดง 8 รายการยอดหนี้สูงสุด" : "";
+      <div class="cardBody">
+        <div class="resultTop">
+          <div class="badge" id="verdictBadge">
+            <div class="big" id="verdictText">—</div>
+            <div class="small" id="verdictReason">—</div>
+          </div>
+          <div class="kpis">
+            <div class="kpi">
+              <div class="t">Leftover / month | เหลือ/เดือน</div>
+              <div class="v" id="kpiLeftover">—</div>
+              <div class="s" id="kpiLeftoverNote">—</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Emergency months | เดือนฉุกเฉิน</div>
+              <div class="v" id="kpiEmMonths">—</div>
+              <div class="s" id="kpiEmNote">—</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Installment share | สัดส่วนผ่อน</div>
+              <div class="v" id="kpiInstShare">—</div>
+              <div class="s" id="kpiDTI">—</div>
+            </div>
+          </div>
+        </div>
 
-        const padding = 18;
-        const chartTop = 10;
-        const chartBottom = cssH - 24;
-        const chartH = chartBottom - chartTop;
-        const chartW = cssW - padding*2;
+        <div class="divider"></div>
 
-        const maxVal = Math.max(...debts.map(d=>toNumber(d.balance)), 1);
-        const barGap = 10;
-        const barW = Math.max(18, Math.floor((chartW - barGap*(debts.length-1)) / debts.length));
+        <div class="twoCols">
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Cashflow | กระแสเงิน</th>
+                  <th class="right">THB / month</th>
+                </tr>
+              </thead>
+              <tbody id="cashflowTable"></tbody>
+            </table>
 
-        // Axis baseline
-        ctx.strokeStyle = "rgba(255,255,255,.14)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(padding, chartBottom);
-        ctx.lineTo(padding + chartW, chartBottom);
-        ctx.stroke();
+            <div class="smallNote" id="daysOfWorkText">—</div>
+          </div>
 
-        // Bars
-        debts.forEach((d,i)=>{
-          const v = toNumber(d.balance);
-          const h = (v / maxVal) * (chartH - 18);
-          const x = padding + i*(barW+barGap);
-          const y = chartBottom - h;
+          <div>
+            <div class="canvasWrap">
+              <div class="hint">Opportunity cost (3 years) | โอกาสที่เสียไป (3 ปี)</div>
+              <canvas id="oppCanvas" width="900" height="420"></canvas>
+              <div class="smallNote" id="oppNote">—</div>
+            </div>
+          </div>
+        </div>
 
-          // color by type
-          const fill = d.type === "credit" ? "rgba(122,162,255,.72)" : "rgba(255,209,102,.72)";
+        <div class="divider"></div>
 
-          // bar
-          roundRect(ctx, x, y, barW, h, 10);
-          ctx.fillStyle = fill;
-          ctx.fill();
+        <table>
+          <thead>
+            <tr>
+              <th>Stress test summary | สรุปทดสอบความเสี่ยง</th>
+              <th class="right">Result</th>
+            </tr>
+          </thead>
+          <tbody id="stressTable"></tbody>
+        </table>
 
-          // label (truncate)
-          const name = (d.name || "").trim();
-          const short = name.length > 10 ? name.slice(0,10) + "…" : name;
+        <div class="divider"></div>
 
-          ctx.fillStyle = "rgba(169,183,214,.95)";
-          ctx.font = "700 11px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-          ctx.textAlign = "center";
-          ctx.fillText(short || "หนี้", x + barW/2, cssH - 8);
+        <table>
+          <thead>
+            <tr>
+              <th>Actions | ทางเลือกที่ทำให้ “ไหว”</th>
+              <th class="right">Suggestion</th>
+            </tr>
+          </thead>
+          <tbody id="actionsTable"></tbody>
+        </table>
 
-          // value on top
-          ctx.fillStyle = "rgba(232,238,252,.95)";
-          ctx.font = "800 11px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-          ctx.fillText(Math.round(v).toLocaleString("th-TH"), x + barW/2, Math.max(12, y - 6));
-        });
-      }
+        <div class="smallNote">
+          Notes | หมายเหตุ: This tool is directional (not financial advice). <span class="muted">ใช้ดู “ความไหว” แบบจริงจัง ไม่ใช่คำแนะนำการลงทุน</span>
+        </div>
+      </div>
+    </section>
+  </main>
 
-      function roundRect(ctx, x, y, w, h, r){
-        const rr = Math.min(r, w/2, h/2);
-        ctx.beginPath();
-        ctx.moveTo(x+rr, y);
-        ctx.arcTo(x+w, y, x+w, y+h, rr);
-        ctx.arcTo(x+w, y+h, x, y+h, rr);
-        ctx.arcTo(x, y+h, x, y, rr);
-        ctx.arcTo(x, y, x+w, y, rr);
-        ctx.closePath();
-      }
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
 
-      // ---------- Routing (Tabs) ----------
-      let currentTab = "dashboard";
+  const ids = [
+    "itemName","itemPrice","oneTimeExtra","recurringMonthly","payMethod","downPayment","instMonths","apr",
+    "incomeNet","incomeExtra","savingsNow","emTarget",
+    "rent","debtMin","family","utilities","transport","insurance",
+    "variableSpend","investRate"
+  ];
 
-      function setTab(tab){
-        currentTab = tab;
-        $$(".tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===tab));
-        if (tab==="dashboard") renderDashboard();
-        else if (tab==="income") renderIncome();
-        else if (tab==="debts") renderDebts();
-        else renderPlan();
-        // After render, update charts on resize
-        requestAnimationFrame(()=>refreshChartsIfNeeded());
-      }
+  let spendPreset = "normal";
+  let stressMode = "none";
 
-      function refreshChartsIfNeeded(){
-        if (currentTab !== "dashboard") return;
-        const pie = $("#pieChart");
-        const bar = $("#barChart");
-        if (pie) drawMoneyPieChart(pie, $("#pieLegend"));
-        if (bar) drawDebtBarChart(bar, $("#barHint"));
-      }
+  const fmt = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 });
+  const fmt2 = new Intl.NumberFormat("th-TH", { maximumFractionDigits: 2 });
 
-      // ---------- Autosave ----------
-      let saveTimer = null;
-      function autosave(){
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(()=>{
-          store.save(state);
-          setLastSaved();
-        }, 120);
-      }
+  function nowStamp(){
+    const d = new Date();
+    return d.toLocaleString("en-GB", { hour12:false });
+  }
 
-      // ---------- Escape helpers ----------
-      function escapeHTML(s){
-        return String(s)
-          .replaceAll("&","&amp;")
-          .replaceAll("<","&lt;")
-          .replaceAll(">","&gt;")
-          .replaceAll('"',"&quot;")
-          .replaceAll("'","&#39;");
-      }
-      function escapeHTMLAttr(s){ return escapeHTML(s).replaceAll("\n"," "); }
-      function cssEscape(s){
-        // minimal escape for attribute query usage
-        return String(s).replaceAll('"','\\"');
-      }
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-      // ---------- Init ----------
-      setMonthLabel();
-      setLastSaved();
+  function getState(){
+    const s = {};
+    ids.forEach(k => s[k] = ( $(k).type === "number" ? Number($(k).value||0) : $(k).value ));
+    s.spendPreset = spendPreset;
+    s.stressMode = stressMode;
+    return s;
+  }
 
-      $$(".tab").forEach(el=>{
-        el.addEventListener("click", ()=>setTab(el.dataset.tab));
+  function setState(s){
+    ids.forEach(k => {
+      if(!(k in s)) return;
+      $(k).value = s[k];
+    });
+    spendPreset = s.spendPreset || "normal";
+    stressMode = s.stressMode || "none";
+    syncPresetUI();
+    syncStressUI();
+    recalc();
+  }
+
+  function save(){
+    localStorage.setItem("canIAffordTH_v1", JSON.stringify(getState()));
+  }
+  function load(){
+    const raw = localStorage.getItem("canIAffordTH_v1");
+    if(!raw) return;
+    setState(JSON.parse(raw));
+  }
+  function reset(){
+    localStorage.removeItem("canIAffordTH_v1");
+    location.reload();
+  }
+
+  function amortizedMonthlyPayment(principal, aprPct, months){
+    // Standard amortization: P * r / (1 - (1+r)^-n)
+    if(months <= 0) return 0;
+    const r = (aprPct/100)/12;
+    if(r <= 0) return principal / months;
+    const denom = 1 - Math.pow(1+r, -months);
+    return principal * (r/denom);
+  }
+
+  function paymentMonthly(s){
+    const priceTotal = Math.max(0, s.itemPrice) + Math.max(0, s.oneTimeExtra);
+    const dp = clamp(Math.max(0, s.downPayment), 0, priceTotal);
+    const financed = Math.max(0, priceTotal - dp);
+
+    const m = Math.max(1, Math.round(s.instMonths || 1));
+    const method = s.payMethod;
+
+    let monthly = 0;
+    let totalPaid = priceTotal;
+
+    if(method === "cash"){
+      monthly = 0;
+      totalPaid = priceTotal; // paid upfront (we treat as hit to savings)
+    } else if(method === "cc_full"){
+      monthly = 0; // assume paid from cashflow this month? we treat as hit to savings for conservative view
+      totalPaid = priceTotal;
+    } else if(method === "inst0"){
+      monthly = financed / m;
+      totalPaid = dp + monthly * m;
+    } else if(method === "inst_int"){
+      const apr = Math.max(0, s.apr);
+      monthly = amortizedMonthlyPayment(financed, apr, m);
+      totalPaid = dp + monthly * m;
+    }
+    return { priceTotal, dp, financed, monthly, months:m, totalPaid };
+  }
+
+  function essentialsMonthly(s){
+    return (
+      Math.max(0,s.rent) +
+      Math.max(0,s.debtMin) +
+      Math.max(0,s.family) +
+      Math.max(0,s.utilities) +
+      Math.max(0,s.transport) +
+      Math.max(0,s.insurance)
+    );
+  }
+
+  function applyPreset(s){
+    // Sets variable spend based on income net+extra if preset not custom.
+    const income = Math.max(0,s.incomeNet) + Math.max(0,s.incomeExtra);
+    const ess = essentialsMonthly(s);
+    const disposable = Math.max(0, income - ess);
+
+    if(spendPreset === "custom") return;
+
+    // Heuristic: percent of disposable (not income) – more realistic.
+    let pct = 0.55; // normal
+    if(spendPreset === "low") pct = 0.40;
+    if(spendPreset === "high") pct = 0.75;
+
+    const v = Math.round(disposable * pct / 100) * 100;
+    // keep at least a small number if disposable is tiny
+    s.variableSpend = clamp(v, 0, 999999999);
+    $("variableSpend").value = s.variableSpend;
+  }
+
+  function stressAdjust(s, pay){
+    // Return adjusted: income, shockOneTime, aprAdj
+    let incomeAdj = (Math.max(0,s.incomeNet) + Math.max(0,s.incomeExtra));
+    let shock = 0;
+    let aprAdj = Math.max(0,s.apr);
+
+    if(stressMode === "income10"){
+      incomeAdj *= 0.90;
+    } else if(stressMode === "shock10"){
+      shock = 10000;
+    } else if(stressMode === "shock30"){
+      shock = 30000;
+    } else if(stressMode === "aprPlus3"){
+      aprAdj = aprAdj + 3;
+    }
+
+    // if APR changes, recompute monthly
+    let pay2 = {...pay};
+    if(stressMode === "aprPlus3" && s.payMethod === "inst_int"){
+      const financed = pay.financed;
+      pay2.monthly = amortizedMonthlyPayment(financed, aprAdj, pay.months);
+      pay2.totalPaid = pay.dp + pay2.monthly * pay.months;
+    }
+    return { incomeAdj, shock, aprAdj, payAdj: pay2 };
+  }
+
+  function verdict(s, metrics){
+    // Scoring logic (brutal but stable)
+    // Key metrics:
+    // - leftover
+    // - emergency months after purchase
+    // - installment share
+    // - obligations share
+    // - worstMonthBalance
+    let score = 0;
+
+    // leftover score
+    if(metrics.leftover >= 0.25 * metrics.income) score += 2;
+    else if(metrics.leftover >= 0.10 * metrics.income) score += 1;
+    else if(metrics.leftover >= 0) score += 0;
+    else score -= 3;
+
+    // emergency fund
+    if(metrics.emMonthsAfter >= s.emTarget) score += 2;
+    else if(metrics.emMonthsAfter >= Math.max(1, s.emTarget*0.6)) score += 0;
+    else score -= 2;
+
+    // installment share
+    if(metrics.installShare <= 0.10) score += 2;
+    else if(metrics.installShare <= 0.15) score += 1;
+    else if(metrics.installShare <= 0.25) score -= 1;
+    else score -= 3;
+
+    // obligations share
+    if(metrics.obligShare <= 0.55) score += 1;
+    else if(metrics.obligShare <= 0.70) score += 0;
+    else score -= 2;
+
+    // worst month
+    if(metrics.worstMonthBalance >= 0) score += 1;
+    else score -= 2;
+
+    // Determine label
+    if(score >= 4) return { level:"SAFE | ไหว", cls:"good", reason:"Healthy buffer + emergency fund ok. | เหลือเงินพอ + กองฉุกเฉินยังอยู่" };
+    if(score >= 1) return { level:"OK but tight | ไหวแต่ตึง", cls:"ok", reason:"You can, but any bad month hurts. | ทำได้ แต่เดือนแย่ๆเสี่ยง" };
+    if(score >= -2) return { level:"RISKY | เสี่ยง", cls:"bad", reason:"Buffer too thin. Consider cheaper / delay. | กันชนบาง แนะนำลดราคา/เลื่อน" };
+    return { level:"NO | ไม่ไหว", cls:"no", reason:"This will break your cashflow or emergency fund. | กระแสเงิน/กองฉุกเฉินพัง" };
+  }
+
+  function drawOpp(canvas, a, b, note){
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // background
+    ctx.fillStyle = "rgba(255,255,255,0.02)";
+    ctx.fillRect(0,0,W,H);
+
+    // axes
+    const pad = 48;
+    const x0 = pad, y0 = H - pad;
+    const x1 = W - pad, y1 = pad;
+
+    ctx.strokeStyle = "rgba(168,179,199,0.25)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0); ctx.lineTo(x1, y0);
+    ctx.moveTo(x0, y0); ctx.lineTo(x0, y1);
+    ctx.stroke();
+
+    const maxV = Math.max(a.max, b.max, 1);
+    const steps = 4;
+
+    // y grid & labels
+    ctx.fillStyle = "rgba(168,179,199,0.75)";
+    ctx.font = "12px system-ui";
+    for(let i=0;i<=steps;i++){
+      const t = i/steps;
+      const y = y0 - t*(y0-y1);
+      ctx.strokeStyle = "rgba(168,179,199,0.12)";
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+      const val = Math.round(t*maxV);
+      ctx.fillText(fmt.format(val), 8, y+4);
+    }
+
+    // plot function
+    function plot(series, alpha){
+      ctx.strokeStyle = alpha;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      series.forEach((v, i)=>{
+        const x = x0 + (i/(series.length-1))*(x1-x0);
+        const y = y0 - (v/maxV)*(y0-y1);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       });
+      ctx.stroke();
+    }
 
-      $("#resetBtn").addEventListener("click", ()=>{
-        const ok = confirm("ล้างข้อมูลทั้งหมดในเครื่องนี้? (ย้อนกลับไม่ได้)");
-        if (!ok) return;
-        store.reset();
-        state = store.load();
-        setMonthLabel();
-        setLastSaved();
-        setTab("dashboard");
-        showToast("ล้างข้อมูลแล้ว");
-      });
+    // series
+    plot(a.series, "rgba(30,227,122,0.85)");  // invest
+    plot(b.series, "rgba(255,209,102,0.85)"); // save
 
-      // redraw charts on resize
-      window.addEventListener("resize", ()=>{
-        refreshChartsIfNeeded();
-      });
+    // legend
+    ctx.fillStyle = "rgba(232,238,247,0.9)";
+    ctx.fillText("Invest | ลงทุน", x0, y1-14);
+    ctx.fillStyle = "rgba(30,227,122,0.85)";
+    ctx.fillRect(x0+92, y1-24, 18, 6);
 
-      // initial render
-      setTab("dashboard");
-    })();
-  </script>
+    ctx.fillStyle = "rgba(232,238,247,0.9)";
+    ctx.fillText("Save (no return) | เก็บเงินเฉยๆ", x0+140, y1-14);
+    ctx.fillStyle = "rgba(255,209,102,0.85)";
+    ctx.fillRect(x0+330, y1-24, 18, 6);
+
+    // x labels (months)
+    ctx.fillStyle = "rgba(168,179,199,0.75)";
+    for(let m=0;m<=36;m+=6){
+      const x = x0 + (m/36)*(x1-x0);
+      ctx.strokeStyle = "rgba(168,179,199,0.12)";
+      ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y0+6); ctx.stroke();
+      ctx.fillText(String(m), x-6, y0+22);
+    }
+    ctx.fillText("months | เดือน", x1-90, y0+22);
+
+    // note
+    $("oppNote").textContent = note;
+  }
+
+  function recalc(){
+    const s = getState();
+    applyPreset(s);
+
+    const pay = paymentMonthly(s);
+    const essentials = essentialsMonthly(s);
+
+    // stress adjusted
+    const st = stressAdjust(s, pay);
+    const income = st.incomeAdj;
+    const payAdj = st.payAdj;
+
+    // monthly item cost:
+    // - installment: monthly payment
+    // - cash / cc_full: treat as 0 monthly, but hit savings upfront
+    const monthlyItem = (s.payMethod === "inst0" || s.payMethod === "inst_int") ? payAdj.monthly : 0;
+
+    const variable = Math.max(0, s.variableSpend);
+    const recurring = Math.max(0, s.recurringMonthly);
+
+    const leftover = income - essentials - variable - monthlyItem - recurring;
+    const obligShare = (essentials + variable + recurring + monthlyItem) / Math.max(1, income);
+
+    // Savings impact (upfront hit)
+    const upfront = (s.payMethod === "cash" || s.payMethod === "cc_full") ? pay.priceTotal : pay.dp;
+    const savingsAfter = Math.max(0, Math.max(0,s.savingsNow) - upfront - st.shock);
+
+    // Emergency months (essential spend: essentials + variable? Use essentials+baseline variable at minimum? We'll use essentials + (0.6*variable) to reflect reality)
+    const essentialSpend = Math.max(1, essentials + 0.60*variable + recurring);
+    const emMonthsNow = Math.max(0, Math.max(0,s.savingsNow) / essentialSpend);
+    const emMonthsAfter = Math.max(0, savingsAfter / essentialSpend);
+
+    // Installment share (if installment)
+    const installShare = monthlyItem / Math.max(1, income);
+    const dti = (Math.max(0,s.debtMin) + monthlyItem) / Math.max(1, income);
+
+    // worst month balance: add shock (already applied to savings, but also show if cashflow negative with lower income / higher payment)
+    const worstMonthBalance = leftover; // under selected stress mode
+
+    // days of real disposable income cost
+    const disposable = Math.max(1, income - essentials - variable - recurring);
+    const daysCost = (pay.priceTotal) / (disposable / 30);
+
+    // opportunity cost (3 years)
+    const rate = Math.max(0, s.investRate)/100;
+    const months = 36;
+    const lump = pay.priceTotal;
+    const investSeries = [];
+    const saveSeries = [];
+    for(let m=0; m<=months; m++){
+      const fv = lump * Math.pow(1 + rate/12, m);
+      investSeries.push(fv);
+      saveSeries.push(lump); // keep cash, no return
+    }
+    const oppNote = `If invested at ${fmt2.format(s.investRate)}%/yr: ~${fmt.format(investSeries[months])} THB in 3 years. | ถ้าเอาไปลงทุน ${fmt2.format(s.investRate)}% ต่อปี: ประมาณ ${fmt.format(investSeries[months])} ใน 3 ปี`;
+
+    // verdict
+    const metrics = { leftover, income, emMonthsAfter, installShare, obligShare, worstMonthBalance };
+    const v = verdict(s, metrics);
+
+    // UI updates
+    $("lastUpdated").textContent = nowStamp();
+
+    // badge
+    const badge = $("verdictBadge");
+    badge.className = "badge " + v.cls;
+    $("verdictText").textContent = v.level;
+    $("verdictReason").textContent = v.reason;
+
+    // KPIs
+    $("kpiLeftover").textContent = (leftover>=0 ? `${fmt.format(leftover)} THB` : `-${fmt.format(Math.abs(leftover))} THB`);
+    $("kpiLeftover").className = "v " + (leftover>=0 ? "goodText" : "danger");
+    $("kpiLeftoverNote").textContent = `Savings rate: ${fmt2.format(Math.max(0,leftover)/Math.max(1,income)*100)}% | อัตราออม`;
+
+    $("kpiEmMonths").textContent = `${fmt2.format(emMonthsAfter)} mo`;
+    $("kpiEmMonths").className = "v " + (emMonthsAfter>=s.emTarget ? "goodText" : (emMonthsAfter>=Math.max(1,s.emTarget*0.6) ? "warn" : "danger"));
+    $("kpiEmNote").textContent = `Target: ${fmt2.format(s.emTarget)} mo | เป้า`;
+
+    $("kpiInstShare").textContent = `${fmt2.format(installShare*100)}%`;
+    $("kpiInstShare").className = "v " + (installShare<=0.10 ? "goodText" : (installShare<=0.15 ? "warn" : "danger"));
+    $("kpiDTI").textContent = `DTI (debt+new): ${fmt2.format(dti*100)}%`;
+
+    // cashflow table
+    const rows = [
+      ["Income | รายได้", income],
+      ["Essentials (fixed) | คงที่จำเป็น", -essentials],
+      ["Variable spend | แปรผัน", -variable],
+      ["New item monthly | ผ่อนของ/เดือน", -monthlyItem],
+      ["Recurring item cost | ค่ารายเดือนของ", -recurring],
+      ["Leftover | เหลือ", leftover],
+    ];
+    $("cashflowTable").innerHTML = rows.map(([k, val])=>{
+      const cls = (k.includes("Leftover") ? (val>=0 ? "goodText" : "danger") : "muted");
+      const sign = val>=0 ? "" : "-";
+      const n = Math.abs(val);
+      return `<tr>
+        <td>${k}</td>
+        <td class="right ${cls}">${sign}${fmt.format(n)}</td>
+      </tr>`;
+    }).join("");
+
+    // days of work
+    $("daysOfWorkText").textContent = `Time cost: ~${fmt2.format(daysCost)} days of REAL disposable income. | เทียบเป็น ~${fmt2.format(daysCost)} วันของ “เงินเหลือจริง”`;
+
+    // stress table
+    const stressRows = [
+      ["Stress mode | โหมด", stressMode],
+      ["Upfront hit to savings | ตัดเงินออมทันที", upfront + (st.shock||0)],
+      ["Savings after purchase | เงินออมหลังซื้อ", savingsAfter],
+      ["Emergency months now | เดือนฉุกเฉินก่อน", emMonthsNow],
+      ["Emergency months after | เดือนฉุกเฉินหลัง", emMonthsAfter],
+      ["Worst-month leftover | เหลือเดือนแย่สุด", worstMonthBalance],
+    ];
+    $("stressTable").innerHTML = stressRows.map(([k,val])=>{
+      let right = "";
+      if(typeof val === "number"){
+        if(k.includes("months")) right = fmt2.format(val) + " mo";
+        else right = fmt.format(val);
+      } else {
+        right = String(val);
+      }
+      let cls = "muted";
+      if(k.includes("Worst") || k.includes("after")){
+        if(typeof val === "number"){
+          if(k.includes("Worst")) cls = (val>=0 ? "goodText" : "danger");
+          if(k.includes("after") && k.includes("months")) cls = (val>=s.emTarget ? "goodText" : (val>=Math.max(1,s.emTarget*0.6) ? "warn" : "danger"));
+        }
+      }
+      return `<tr><td>${k}</td><td class="right ${cls}">${right}</td></tr>`;
+    }).join("");
+
+    // actions table (make it actionable)
+    const actions = [];
+
+    // Safe price estimation (binary search on priceTotal) to reach "OK but tight" at least, under current stress
+    function canAtPrice(p){
+      const s2 = {...s, itemPrice: p - s.oneTimeExtra};
+      const pay2 = paymentMonthly(s2);
+      const st2 = stressAdjust(s2, pay2);
+      const income2 = st2.incomeAdj;
+      const essentials2 = essentialsMonthly(s2);
+      const monthlyItem2 = (s2.payMethod === "inst0" || s2.payMethod === "inst_int") ? st2.payAdj.monthly : 0;
+      const variable2 = Math.max(0, s2.variableSpend);
+      const recurring2 = Math.max(0, s2.recurringMonthly);
+      const leftover2 = income2 - essentials2 - variable2 - monthlyItem2 - recurring2;
+      const upfront2 = (s2.payMethod === "cash" || s2.payMethod === "cc_full") ? pay2.priceTotal : pay2.dp;
+      const savingsAfter2 = Math.max(0, Math.max(0,s2.savingsNow) - upfront2 - (st2.shock||0));
+      const essentialSpend2 = Math.max(1, essentials2 + 0.60*variable2 + recurring2);
+      const emAfter2 = Math.max(0, savingsAfter2/essentialSpend2);
+      const installShare2 = monthlyItem2 / Math.max(1, income2);
+      const obligShare2 = (essentials2 + variable2 + recurring2 + monthlyItem2)/Math.max(1,income2);
+      const vv = verdict(s2, {leftover:leftover2, income:income2, emMonthsAfter:emAfter2, installShare:installShare2, obligShare:obligShare2, worstMonthBalance:leftover2});
+      return (vv.cls === "good" || vv.cls === "ok");
+    }
+
+    // compute safe price by searching from 0..current
+    const currentTotal = pay.priceTotal;
+    let lo = 0, hi = Math.max(0, currentTotal), ans = hi;
+    for(let i=0;i<22;i++){
+      const mid = (lo+hi)/2;
+      if(canAtPrice(mid)){
+        ans = mid; lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    const safePrice = Math.round(ans/100)*100;
+
+    actions.push(["Safe max price | ราคาสูงสุดที่ยัง “พอไหว”", `${fmt.format(safePrice)} THB (under current stress mode)`]);
+
+    // suggest saving plan if risky
+    const gap = Math.max(0, currentTotal - safePrice);
+    if(gap > 0){
+      const savePerMonth = clamp(Math.round(gap/6/100)*100, 500, 999999999);
+      actions.push(["Save then buy | เก็บก่อนค่อยซื้อ",
+        `Reduce price by ${fmt.format(gap)} THB or save ~${fmt.format(savePerMonth)} THB/month for 6 months.`]);
+    }
+
+    // installment suggestion
+    if(s.payMethod === "cash" || s.payMethod === "cc_full"){
+      actions.push(["Option | ทางเลือก",
+        `If you must buy: consider 0% installment to protect emergency fund (but keep leftover ≥ 0). | ถ้าจำเป็นต้องซื้อ: ผ่อน 0% จะกันกองฉุกเฉินได้`]);
+    } else {
+      // extend months suggestion
+      const m = pay.months;
+      const m2 = clamp(m + 6, 1, 60);
+      if(s.payMethod === "inst0"){
+        const monthly2 = pay.financed / m2;
+        actions.push(["Lower monthly | ลดค่างวด",
+          `Extend to ${m2} months → ~${fmt.format(monthly2)} THB/month (0%).`]);
+      } else if(s.payMethod === "inst_int"){
+        const monthly2 = amortizedMonthlyPayment(pay.financed, Math.max(0,s.apr), m2);
+        actions.push(["Lower monthly | ลดค่างวด",
+          `Extend to ${m2} months → ~${fmt.format(monthly2)} THB/month (interest).`]);
+      }
+    }
+
+    // variable spend cut suggestion
+    if(leftover < 0 || installShare > 0.15){
+      const cut = clamp(Math.round((Math.abs(Math.min(0,leftover)) + income*0.05)/100)*100, 300, 20000);
+      actions.push(["Cut variable spend | ลดค่าแปรผัน",
+        `Try cutting ~${fmt.format(cut)} THB/month (coffee/food/entertainment) until stable.`]);
+    }
+
+    // emergency fund restore
+    if(emMonthsAfter < s.emTarget){
+      const need = Math.max(0, s.emTarget*essentialSpend - savingsAfter);
+      actions.push(["Restore emergency fund | เติมกองฉุกเฉิน",
+        `Need ~${fmt.format(need)} THB to reach target (${fmt2.format(s.emTarget)} mo).`]);
+    }
+
+    $("actionsTable").innerHTML = actions.map(([k,v])=>`<tr><td>${k}</td><td class="right">${v}</td></tr>`).join("");
+
+    // opportunity chart
+    drawOpp($("oppCanvas"),
+      { series: investSeries, max: investSeries[months] },
+      { series: saveSeries, max: investSeries[months] },
+      oppNote
+    );
+  }
+
+  // Tabs
+  function showTab(name){
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+    document.querySelectorAll(".tabPanel").forEach(p => p.style.display = "none");
+    $("tab-"+name).style.display = "block";
+  }
+  $("tabs").addEventListener("click", (e)=>{
+    const t = e.target.closest(".tab");
+    if(!t) return;
+    showTab(t.dataset.tab);
+  });
+
+  // Spend preset UI
+  function syncPresetUI(){
+    document.querySelectorAll("#spendPreset .chip").forEach(c=>{
+      c.classList.toggle("active", c.dataset.v === spendPreset);
+    });
+    const custom = (spendPreset === "custom");
+    $("variableSpend").disabled = !custom;
+    $("variableSpend").style.opacity = custom ? "1" : ".85";
+  }
+  $("spendPreset").addEventListener("click", (e)=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    spendPreset = c.dataset.v;
+    syncPresetUI();
+    recalc();
+  });
+
+  // Stress UI
+  function syncStressUI(){
+    document.querySelectorAll("#stressChips .chip").forEach(c=>{
+      c.classList.toggle("active", c.dataset.s === stressMode);
+    });
+  }
+  $("stressChips").addEventListener("click", (e)=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    stressMode = c.dataset.s;
+    syncStressUI();
+    recalc();
+  });
+
+  // Enable/disable installment fields by payment method
+  function syncPaymentFields(){
+    const method = $("payMethod").value;
+    const inst = (method === "inst0" || method === "inst_int");
+    $("instMonths").disabled = !inst;
+    $("apr").disabled = !(method === "inst_int");
+  }
+
+  // Save/load/reset
+  $("btnSave").addEventListener("click", ()=>{ save(); recalc(); });
+  $("btnLoad").addEventListener("click", ()=>{ load(); });
+  $("btnReset").addEventListener("click", ()=>{ reset(); });
+
+  // Recalc on inputs
+  ids.forEach(k=>{
+    $(k).addEventListener("input", ()=>{
+      if(k === "payMethod"){ syncPaymentFields(); }
+      recalc();
+    });
+    $(k).addEventListener("change", ()=>{
+      if(k === "payMethod"){ syncPaymentFields(); }
+      recalc();
+    });
+  });
+
+  // initial
+  syncPresetUI();
+  syncStressUI();
+  syncPaymentFields();
+
+  // Try load saved
+  const raw = localStorage.getItem("canIAffordTH_v1");
+  if(raw){
+    try{ setState(JSON.parse(raw)); }
+    catch{ recalc(); }
+  } else {
+    recalc();
+  }
+})();
+</script>
 </body>
 </html>
